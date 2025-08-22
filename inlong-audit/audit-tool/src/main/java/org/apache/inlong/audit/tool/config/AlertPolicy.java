@@ -1,38 +1,25 @@
 package org.apache.inlong.audit.tool.config;
 
-public class AlertPolicy {
-    private String name;
-    private String description;
-    private double threshold;
-    private String comparisonOperator;
-    private String alertType;
+import lombok.Getter;
 
-    public AlertPolicy(String name, String description, double threshold, String comparisonOperator, String alertType) {
+import java.util.List;
+
+@Getter
+public class AlertPolicy {
+    private final String name;
+    private final String description;
+    private final double threshold;
+    private final String comparisonOperator;
+    private final String alertType;
+    private final List<String> targets;
+
+    public AlertPolicy(String name, String description, double threshold, String comparisonOperator, String alertType, List<String> targets) {
         this.name = name;
         this.description = description;
         this.threshold = threshold;
         this.comparisonOperator = comparisonOperator;
         this.alertType = alertType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public double getThreshold() {
-        return threshold;
-    }
-
-    public String getComparisonOperator() {
-        return comparisonOperator;
-    }
-
-    public String getAlertType() {
-        return alertType;
+        this.targets = targets;
     }
 
     @Override
@@ -43,6 +30,7 @@ public class AlertPolicy {
                 ", threshold=" + threshold +
                 ", comparisonOperator='" + comparisonOperator + '\'' +
                 ", alertType='" + alertType + '\'' +
+                ", targets=" + targets +
                 '}';
     }
 }

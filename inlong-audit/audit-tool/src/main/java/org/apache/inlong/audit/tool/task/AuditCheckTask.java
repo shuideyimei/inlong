@@ -33,10 +33,10 @@ public class AuditCheckTask {
 
     private void checkAuditData() {
         List<AlertPolicy> alertPolicies = managerClient.fetchAlertPolicies();
-        AuditData auditData = managerClient.fetchAuditData();
+        AuditData metricData = managerClient.fetchAuditData();
         for (AlertPolicy policy : alertPolicies) {
-            if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
-                alertEvaluator.triggerAlert(auditData, policy);
+            if (alertEvaluator.shouldTriggerAlert(metricData, policy)) {
+                alertEvaluator.triggerAlert(metricData, policy);
             }
         }
     }
