@@ -38,8 +38,7 @@ public class AuditData {
     }
 
     public double getDataLossRate() {
-        // 根据 count, size 等字段计算数据丢失率
-        // 这里只是一个示例实现，具体逻辑可能需要根据业务需求调整
+
         return count > 0 ? (double) (count - size) / count : 0.0;
     }
 

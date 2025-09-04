@@ -17,15 +17,13 @@ public class AuditToolMain {
         ManagerClient managerClient = new ManagerClient(appConfig);
 
         // Initialize alert evaluator
-        AlertEvaluator alertEvaluator = new AlertEvaluator(new PrometheusReporter(), new OpenTelemetryReporter());
-
         // Initialize reporters
         PrometheusReporter prometheusReporter = new PrometheusReporter(appConfig.getPrometheusConfig());
         OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter(appConfig.getOpenTelemetryConfig());
 
         // Schedule the audit check task
-        AuditCheckTask auditCheckTask = new AuditCheckTask(appConfig);
-        auditCheckTask.start(DEFAULT_INTERVAL);
+        AuditCheckTask auditCheckTask = new AuditCheckTask(prometheusReporter, openTelemetryReporter, appConfig);
+        auditCheckTask.start();
 
         // Keep the application running
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
