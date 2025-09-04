@@ -1,4 +1,4 @@
-package org.apache.inlong.audit.tool.result;
+package org.apache.inlong.audit.tool.response;
 /**
  * The response info of API
  */
