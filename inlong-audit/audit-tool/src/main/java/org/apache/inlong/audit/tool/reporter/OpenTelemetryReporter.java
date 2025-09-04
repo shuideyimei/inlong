@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.metric.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;

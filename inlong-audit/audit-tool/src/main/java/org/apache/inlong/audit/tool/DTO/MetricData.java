@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.metric;
+package org.apache.inlong.audit.tool.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,7 +49,7 @@ public class MetricData {
 
     /**
      * Information about a triggered alert. This can be null if no alert
-     * was triggered for this metric data point.
+     * was triggered for this DTO data point.
      */
     private AlertInfo alertInfo;
 

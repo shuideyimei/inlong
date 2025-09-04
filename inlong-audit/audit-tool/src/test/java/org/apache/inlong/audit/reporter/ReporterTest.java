@@ -23,8 +23,8 @@ import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.apache.inlong.audit.tool.metric.MetricData;
-import org.apache.inlong.audit.tool.metric.MetricData.AlertInfo;
+import org.apache.inlong.audit.tool.DTO.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData.AlertInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -136,7 +136,7 @@ class PrometheusReporterTest {
  */
 class OpenTelemetryReporterTest {
 
-    // OpenTelemetryExtension registers an in-memory metric reader and exporter
+    // OpenTelemetryExtension registers an in-memory DTO reader and exporter
     @RegisterExtension
     static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 

@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.metric.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
@@ -54,7 +54,7 @@ public class PrometheusReporter implements MetricReporter {
 
     /**
      * Constructor for PrometheusReporter.
-     * Initializes a new CollectorRegistry for metric isolation.
+     * Initializes a new CollectorRegistry for DTO isolation.
      */
     public PrometheusReporter() {
         this.registry = new CollectorRegistry();
@@ -97,9 +97,9 @@ public class PrometheusReporter implements MetricReporter {
     }
 
     /**
-     * Reports the given metric data to Prometheus.
+     * Reports the given DTO data to Prometheus.
      *
-     * @param metricData The metric data to report.
+     * @param metricData The DTO data to report.
      */
     @Override
     public void report(MetricData metricData) {
