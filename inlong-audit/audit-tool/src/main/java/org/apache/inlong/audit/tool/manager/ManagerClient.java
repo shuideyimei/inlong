@@ -31,7 +31,7 @@ public class ManagerClient {
         String managerUrl = appConfig.getManagerUrl(); // "http://localhost:8080"
         String path = "/audit/alert/rule/list";
         // 确保只出现一个斜杠
-        String fullUrl = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
+        String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
         //发送http请求manger API获取AuditAlertRule告警策略
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
@@ -67,7 +67,7 @@ public class ManagerClient {
             String managerUrl = appConfig.getManagerUrl(); // "http://localhost:8080"
             String path = "/audit/listAll";
             // 确保只出现一个斜杠
-            String fullUrl = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
+            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
 
             String jsonBody = mapper.writeValueAsString(auditRequest);
 
