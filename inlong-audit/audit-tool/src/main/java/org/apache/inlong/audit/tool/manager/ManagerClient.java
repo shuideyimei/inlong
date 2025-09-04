@@ -87,7 +87,7 @@ public class ManagerClient {
             if (response.statusCode() != 200) {
                 auditDataList.add(mapper.readValue(response.getData(), new TypeReference<List<AuditData>>() {}));
             } else {
-                LOGGER.error("fetchAlertPolicies fail " + ": " + response.getData());
+                LOGGER.error("fetchAuditData fail " + ": " + response.getData());
             }
         }
         return auditDataList;
