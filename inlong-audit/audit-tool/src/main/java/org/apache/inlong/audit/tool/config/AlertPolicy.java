@@ -42,7 +42,5 @@ public class AlertPolicy {
         return null;
     }
 
-    public CounterGroup getThresholds() {
-        return null;
-    }
+
 }
