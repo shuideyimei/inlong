@@ -38,10 +38,16 @@ public class AlertEvaluator {
         List<String> targets = alertPolicy.getTargets();
         if (targets != null) {
             for (String target : targets) {
-                if ("prometheus".equalsIgnoreCase(target)) {
-                    enabledPlatforms.add("prometheus");
-                } else if ("opentelemetry".equalsIgnoreCase(target)) {
-                    enabledPlatforms.add("opentelemetry");
+                switch (target.toLowerCase()) {
+                    case "prometheus":
+                        enabledPlatforms.add("prometheus");
+                        break;
+                    case "opentelemetry":
+                        enabledPlatforms.add("opentelemetry");
+                        break;
+                    default:
+                        System.out.println("Invalid platform");
+                        break;
                 }
             }
         }
