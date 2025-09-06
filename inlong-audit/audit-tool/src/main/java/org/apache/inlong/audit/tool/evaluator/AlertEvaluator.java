@@ -24,7 +24,7 @@ public class AlertEvaluator {
     public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
-        this.managerClient = managerClient; // 实际使用时应传入正确的AppConfig
+        this.managerClient = managerClient;
     }
 
     private MetricData calculateMetricData(AuditData auditData) {
