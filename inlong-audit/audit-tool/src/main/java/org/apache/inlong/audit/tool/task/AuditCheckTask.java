@@ -1,7 +1,7 @@
 package org.apache.inlong.audit.tool.task;
 
+import lombok.Getter;
 import org.apache.inlong.audit.tool.config.AlertPolicy;
-import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.DTO.AuditData;
@@ -19,16 +19,17 @@ import java.util.concurrent.TimeUnit;
 public class AuditCheckTask {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final AlertEvaluator alertEvaluator;
-    private final PrometheusReporter prometheusReporter;
-    private final OpenTelemetryReporter openTelemetryReporter;
+    @Getter
+    private PrometheusReporter prometheusReporter;
+    @Getter
+    private OpenTelemetryReporter openTelemetryReporter;
     private final ManagerClient managerClient;
     
-    public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, AppConfig appconfig) {
+    public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient, AlertEvaluator alertEvaluator) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
-        this.alertEvaluator = new AlertEvaluator(prometheusReporter, openTelemetryReporter, appconfig);
-        // 需要创建ManagerClient实例
-        this.managerClient = new ManagerClient(appconfig);
+        this.managerClient = managerClient;
+        this.alertEvaluator = alertEvaluator;
     }
 
     /**
@@ -44,20 +45,23 @@ public class AuditCheckTask {
     private void checkAuditData() {
         try {
             // 获取审计数据
-            AuditData auditData = managerClient.fetchAuditData();
+            List<AuditData> auditDataList = managerClient.fetchAuditData();
             
             // 获取告警策略
             List<AlertPolicy> policies = managerClient.fetchAlertPolicies();
             
-            // 对每个策略进行评估
-            for (AlertPolicy policy : policies) {
-                if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
-                    alertEvaluator.triggerAlert(auditData, policy);
+            // 对每个审计数据和每个策略进行评估
+            for (AuditData auditData : auditDataList) {
+                for (AlertPolicy policy : policies) {
+                    if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
+                        alertEvaluator.triggerAlert(auditData, policy);
+                    }
                 }
             }
         } catch (Exception e) {
-            // 记录异常日志
-            e.printStackTrace();
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+            System.out.println("Error occurred while checking audit data: " + e.getMessage());
         }
     }
     
@@ -75,4 +79,5 @@ public class AuditCheckTask {
             Thread.currentThread().interrupt();
         }
     }
+
 }

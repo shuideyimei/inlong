@@ -21,20 +21,8 @@ public class AuditData {
     private long delay;
     private long updateTime;
 
-    public long getCount() {
-        return count;
-    }
-
     public double getSize() {
         return size;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public String getStreamId() {
-        return streamId;
     }
 
     public double getDataLossRate() {

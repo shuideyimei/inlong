@@ -22,7 +22,8 @@ public class AuditToolMain {
         OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter(appConfig.getOpenTelemetryConfig());
 
         // Schedule the audit check task
-        AuditCheckTask auditCheckTask = new AuditCheckTask(prometheusReporter, openTelemetryReporter, appConfig);
+        AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, openTelemetryReporter, managerClient);
+        AuditCheckTask auditCheckTask = new AuditCheckTask(prometheusReporter, openTelemetryReporter, managerClient, alertEvaluator);
         auditCheckTask.start();
 
         // Keep the application running

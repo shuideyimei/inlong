@@ -1,11 +1,13 @@
 package org.apache.inlong.audit.tool.config;
 
 import lombok.Data;
+import lombok.Getter;
 import org.apache.inlong.common.monitor.CounterGroup;
 
 import java.util.List;
 
 
+@Getter
 public class AlertPolicy {
     private String name;
     private String description;
@@ -23,26 +25,6 @@ public class AlertPolicy {
 
     public AlertPolicy() {
 
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public double getThreshold() {
-        return threshold;
-    }
-
-    public String getComparisonOperator() {
-        return comparisonOperator;
-    }
-
-    public String getAlertType() {
-        return alertType;
     }
 
     @Override
