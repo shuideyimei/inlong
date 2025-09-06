@@ -1,7 +1,7 @@
 package org.apache.inlong.audit.tool.manager;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.config.AlertPolicy;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
@@ -42,9 +42,13 @@ public class ManagerClient {
         this.openTelemetryReporter = new OpenTelemetryReporter(appConfig.getOpenTelemetryConfig());
     }
 
-    public List<AuditAlertRule> fetchAlertPolicies() throws Exception {
+    public List<AlertPolicy> fetchAlertPolicies() throws Exception {
+        List<AuditAlertRule> auditAlertRules = fetchAlertRules();
+        return CommonBeanUtils.copyListProperties(auditAlertRules, AlertPolicy::new);
+    }
+
+    public List<AuditAlertRule> fetchAlertRules(){
         String managerUrl = appConfig.getManagerUrl();
-        ObjectMapper mapper = new ObjectMapper();// "http://localhost:8080"
         String path = "/audit/alert/rule/list";
         // 确保只出现一个斜杠
         String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
@@ -66,7 +70,7 @@ public class ManagerClient {
 
 
     public List<AuditData> fetchAuditData() throws Exception {
-        List<AuditAlertRule> auditAlertRules = fetchAlertPolicies();
+        List<AuditAlertRule> auditAlertRules = fetchAlertRules();
         List<AuditData> auditDataList = new ArrayList<>();
         for(AuditAlertRule auditAlertRule :  auditAlertRules){
             ObjectMapper mapper = new ObjectMapper();
