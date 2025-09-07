@@ -11,15 +11,15 @@ public class AuditToolMain {
     private static final long DEFAULT_INTERVAL = 30000; // 30秒
     public static void main(String[] args) {
         // Load application configuration
-        AppConfig appConfig = AppConfig.load();
+        AppConfig appConfig = new AppConfig();
 
         // Initialize manager client
         ManagerClient managerClient = new ManagerClient(appConfig);
 
         // Initialize alert evaluator
         // Initialize reporters
-        PrometheusReporter prometheusReporter = new PrometheusReporter(appConfig.getPrometheusConfig());
-        OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter(appConfig.getOpenTelemetryConfig());
+        PrometheusReporter prometheusReporter = new PrometheusReporter();
+        OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter();
 
         // Schedule the audit check task
         AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, openTelemetryReporter, managerClient);

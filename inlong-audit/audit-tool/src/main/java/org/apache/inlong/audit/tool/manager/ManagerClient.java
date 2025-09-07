@@ -30,16 +30,12 @@ import java.util.stream.Collectors;
 public class ManagerClient {
 
     private final AppConfig appConfig;
-    private final PrometheusReporter prometheusReporter;
-    private final OpenTelemetryReporter openTelemetryReporter;
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
     @Autowired
     private RestTemplate restTemplate;
 
     public ManagerClient(AppConfig appConfig) {
         this.appConfig = appConfig;
-        this.prometheusReporter = new PrometheusReporter(appConfig.getPrometheusConfig());
-        this.openTelemetryReporter = new OpenTelemetryReporter(appConfig.getOpenTelemetryConfig());
     }
 
     public List<AlertPolicy> fetchAlertPolicies() throws Exception {

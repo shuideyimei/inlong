@@ -6,12 +6,12 @@ import java.util.Properties;
 
 public class AppConfig {
     private Properties properties;
-    private ManagerClient managerClient;
+
 
     public AppConfig() {
         properties = new Properties();
         loadProperties();
-        managerClient = new ManagerClient(properties.getProperty("manager.url"));
+
     }
 
     private void loadProperties() {
@@ -30,7 +30,5 @@ public class AppConfig {
         return properties.getProperty("alert.policy.config");
     }
 
-    public ManagerClient getManagerClient() {
-        return managerClient;
-    }
+
 }
