@@ -1,8 +1,6 @@
-package org.apache.inlong.audit.tool.config;
+package org.apache.inlong.audit.tool.DTO;
 
-import lombok.Data;
 import lombok.Getter;
-import org.apache.inlong.common.monitor.CounterGroup;
 
 import java.util.List;
 

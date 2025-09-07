@@ -3,9 +3,7 @@ package org.apache.inlong.audit.tool.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.inlong.audit.tool.config.AppConfig;
-import org.apache.inlong.audit.tool.config.AlertPolicy;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
-import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.util.CommonBeanUtils;
 import org.apache.inlong.audit.tool.util.HttpUtils;

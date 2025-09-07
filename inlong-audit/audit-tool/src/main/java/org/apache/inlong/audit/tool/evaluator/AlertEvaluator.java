@@ -1,7 +1,7 @@
 package org.apache.inlong.audit.tool.evaluator;
 
 import lombok.Getter;
-import org.apache.inlong.audit.tool.config.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.DTO.MetricData;
