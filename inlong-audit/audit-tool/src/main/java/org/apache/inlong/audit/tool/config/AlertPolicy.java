@@ -5,6 +5,8 @@ import lombok.Getter;
 import org.apache.inlong.common.monitor.CounterGroup;
 
 import java.util.List;
+import java.util.Arrays;
+import java.util.List;
 
 
 @Getter
@@ -14,6 +16,8 @@ public class AlertPolicy {
     private double threshold;
     private String comparisonOperator;
     private String alertType;
+    @Getter
+    private List<String> targets;
 
     public AlertPolicy(String name, String description, double threshold, String comparisonOperator, String alertType) {
         this.name = name;
@@ -35,12 +39,7 @@ public class AlertPolicy {
                 ", threshold=" + threshold +
                 ", comparisonOperator='" + comparisonOperator + '\'' +
                 ", alertType='" + alertType + '\'' +
+                ", targets=" + targets +
                 '}';
     }
-
-    public List<String> getTargets() {
-        return null;
-    }
-
-
 }
