@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AlertEvaluator {
+    @Getter
     private final PrometheusReporter prometheusReporter;
+    @Getter
     private final OpenTelemetryReporter openTelemetryReporter;
     @Getter
     private final ManagerClient managerClient;
