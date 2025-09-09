@@ -2,19 +2,15 @@ package org.apache.inlong.audit.tool.manager;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.inlong.audit.tool.DTO.*;
 import org.apache.inlong.audit.tool.config.AppConfig;
-import org.apache.inlong.audit.tool.DTO.AlertPolicy;
-import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.util.CommonBeanUtils;
 import org.apache.inlong.audit.tool.util.HttpUtils;
-import org.apache.inlong.manager.pojo.audit.*;
 import org.apache.inlong.audit.tool.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -24,13 +20,13 @@ import java.util.List;
 
 import java.util.stream.Collectors;
 
-@Service
+
+
 public class ManagerClient {
 
     private final AppConfig appConfig;
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public ManagerClient(AppConfig appConfig) {
         this.appConfig = appConfig;
@@ -44,6 +40,7 @@ public class ManagerClient {
     public List<AuditAlertRule> fetchAlertRules(){
         String managerUrl = appConfig.getManagerUrl();
         String path = "/audit/alert/rule/list";
+        RestTemplate restTemplate = new RestTemplate();
         // 确保只出现一个斜杠
         String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
         //发送http请求manger API获取AuditAlertRule告警策略
