@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.reporter;
+package org.apache.inlong.audit.reporter;
 
 import org.apache.inlong.audit.tool.DTO.MetricData;
 import org.apache.inlong.audit.tool.DTO.MetricData.AlertInfo;
@@ -26,6 +26,8 @@ import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
