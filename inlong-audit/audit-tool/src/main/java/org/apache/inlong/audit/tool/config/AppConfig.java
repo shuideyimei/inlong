@@ -3,7 +3,9 @@ package org.apache.inlong.audit.tool.config;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 
 import java.util.Properties;
-
+/**
+ * App Config
+ */
 public class AppConfig {
     private Properties properties;
 

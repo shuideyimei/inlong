@@ -57,14 +57,14 @@ public class AlertEvaluator {
     public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
         this.auditData = auditData;
         this.alertpolicy = alertPolicy;
-        // 实现具体的告警判断逻辑
+
         double dataLossRate = auditData.getDataLossRate();
 
-        // 获取阈值
+
         double threshold = alertPolicy.getThreshold();
         String comparisonOperator = alertPolicy.getComparisonOperator();
 
-        // 根据比较操作符判断是否触发告警
+
         switch (comparisonOperator) {
             case ">":
                 return dataLossRate > threshold;

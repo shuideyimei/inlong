@@ -6,11 +6,9 @@ import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+
+
 public class AuditToolMain {
     private static final long DEFAULT_INTERVAL = 30000; // 30秒
     public static void main(String[] args) {
@@ -37,6 +35,5 @@ public class AuditToolMain {
         }));
 
         System.out.println("Audit Tool started.");
-        SpringApplication.run(AuditToolMain.class, args);
     }
 }

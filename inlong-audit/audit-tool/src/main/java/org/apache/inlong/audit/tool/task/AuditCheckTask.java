@@ -7,6 +7,8 @@ import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -14,7 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 审计检查任务类，定期获取审计数据并评估告警
+ * AuditCheckTask class: Periodically fetches audit data and evaluates alert policies.
  */
 public class AuditCheckTask {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -24,6 +26,7 @@ public class AuditCheckTask {
     @Getter
     private OpenTelemetryReporter openTelemetryReporter;
     private final ManagerClient managerClient;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
     
     public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient, AlertEvaluator alertEvaluator) {
         this.prometheusReporter = prometheusReporter;
@@ -33,40 +36,78 @@ public class AuditCheckTask {
     }
 
     /**
-     * 启动审计检查任务
+     * Initiate the audit inspection task
      */
     public void start() {
         scheduler.scheduleAtFixedRate(this::checkAuditData, 0, 30, TimeUnit.SECONDS);
     }
-    
+
     /**
-     * 检查审计数据并触发告警评估
+     * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
-        try {
-            // 获取审计数据
-            List<AuditData> auditDataList = managerClient.fetchAuditData();
-            
-            // 获取告警策略
-            List<AlertPolicy> policies = managerClient.fetchAlertPolicies();
-            
-            // 对每个审计数据和每个策略进行评估
-            for (AuditData auditData : auditDataList) {
-                for (AlertPolicy policy : policies) {
-                    if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
-                        alertEvaluator.triggerAlert(auditData, policy);
+        final long startTime = System.currentTimeMillis();
+        final long timeoutMillis = 10 * 60 * 1000; // 10 minutes timeout
+        int attempt = 0;
+        boolean success = false;
+
+        while (!success && (System.currentTimeMillis() - startTime) < timeoutMillis) {
+            attempt++;
+            try {
+                LOGGER.info("Attempt #{} to check audit data", attempt);
+
+                // Get audit data
+                List<AuditData> auditDataList = managerClient.fetchAuditData();
+
+                // Get alert policies
+                List<AlertPolicy> policies = managerClient.fetchAlertPolicies();
+
+                // Evaluate each audit data against each policy
+                for (AuditData auditData : auditDataList) {
+                    for (AlertPolicy policy : policies) {
+                        if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
+                            alertEvaluator.triggerAlert(auditData, policy);
+                        }
                     }
                 }
+
+                // Successfully completed, exit loop
+                success = true;
+                LOGGER.info("Successfully checked audit data on attempt #{}", attempt);
+
+            } catch (Exception e) {
+                // Log error but continue retrying
+                LOGGER.error("Error occurred on attempt #{}: {}", attempt, e.getMessage());
+                LOGGER.debug("Error details", e);
+
+                // Check if timeout reached
+                if ((System.currentTimeMillis() - startTime) >= timeoutMillis) {
+                    LOGGER.error("Timeout reached after {} minutes. Terminating thread.", 10);
+                    break;
+                }
+
+                // Wait 3 seconds before retrying
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    LOGGER.warn("Thread interrupted during retry wait");
+                    break;
+                }
             }
-        } catch (Exception e) {
+        }
+
+        // Terminate thread if not successful after 10 minutes
+        if (!success) {
+            LOGGER.error("Failed to check audit data after {} attempts and {} minutes. Terminating thread.",
+                    attempt, 10);
             scheduler.shutdownNow();
             Thread.currentThread().interrupt();
-            System.out.println("Error occurred while checking audit data: " + e.getMessage());
         }
     }
     
     /**
-     * 停止审计检查任务
+     * Stop the audit inspection task
      */
     public void stop() {
         scheduler.shutdown();
