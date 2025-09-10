@@ -133,7 +133,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertNotNull(result, "Created alert rule ID should not be null");
         Assertions.assertEquals(1, result.intValue(), "Rule ID should be 1");
 
-        System.out.println("✓ Successfully created alert rule, ID: " + result);
     }
 
     @Test
@@ -162,7 +161,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertEquals(TEST_ALERT_NAME, result.getAlertName(), "Alert name should match");
         Assertions.assertEquals(0, result.getIsDeleted().intValue(), "Rule should not be deleted");
 
-        System.out.println("✓ Successfully queried alert rule, name: " + result.getAlertName());
     }
 
     @Test
@@ -202,7 +200,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "First rule should not be deleted");
         Assertions.assertEquals(0, result.get(1).getIsDeleted().intValue(), "Second rule should not be deleted");
 
-        System.out.println("✓ Successfully queried enabled alert rules, count: " + result.size());
     }
 
     @Test
@@ -231,7 +228,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertEquals(TEST_GROUP_ID, result.get(0).getInlongGroupId(), "Group ID should match");
         Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "Rule should not be deleted");
 
-        System.out.println("✓ Successfully queried alert rules by group, group ID: " + TEST_GROUP_ID);
     }
 
     @Test
@@ -263,8 +259,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertEquals(TEST_STREAM_ID, result.get(0).getInlongStreamId(), "Stream ID should match");
         Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "Rule should not be deleted");
 
-        System.out.println("✓ Successfully queried alert rules by group and stream, group ID: " + TEST_GROUP_ID
-                + ", stream ID: " + TEST_STREAM_ID);
     }
 
     @Test
@@ -307,7 +301,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertEquals("Updated Integration Test Alert", result.getAlertName(), "Updated name should match");
         Assertions.assertEquals(2, result.getVersion().intValue(), "Version should be updated");
 
-        System.out.println("✓ Successfully updated alert rule, new condition: " + result.getCondition());
     }
 
     @Test
@@ -318,7 +311,7 @@ public class AuditAlertRuleIntegrationTest {
 
         // Mock API response
         stubFor(
-                delete(urlMatching("/inlong/manager/api/audit/alert/rule/" + createdRuleId + ".*"))
+                delete(urlMatching("/inlong/manager/api/audit/delete/" + createdRuleId + ".*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
@@ -328,7 +321,6 @@ public class AuditAlertRuleIntegrationTest {
         Assertions.assertNotNull(result, "Delete result should not be null");
         Assertions.assertTrue(result, "Delete should be successful");
 
-        System.out.println("✓ Successfully deleted alert rule, ID: " + createdRuleId);
     }
 
     @Test
@@ -384,13 +376,12 @@ public class AuditAlertRuleIntegrationTest {
 
         // 4. Delete rule
         stubFor(
-                delete(urlMatching("/inlong/manager/api/audit/alert/rule/100.*"))
+                delete(urlMatching("/inlong/manager/api/audit/delete/100.*"))
                         .willReturn(okJson(JsonUtils.toJsonString(Response.success(true)))));
 
         Boolean deleteResult = auditClient.delete(100);
         Assertions.assertTrue(deleteResult);
 
-        System.out.println("✓ Complete workflow test successful");
     }
 
     @Test
@@ -410,17 +401,15 @@ public class AuditAlertRuleIntegrationTest {
             auditClient.get(999);
             Assertions.fail("Exception should be thrown");
         } catch (Exception e) {
-            System.out.println("✓ Correctly handled non-existent rule query error");
         }
 
         // 2. Test deleting non-existent rule
         stubFor(
-                delete(urlMatching("/inlong/manager/api/audit/alert/rule/999.*"))
+                delete(urlMatching("/inlong/manager/api/audit/delete/999.*"))
                         .willReturn(okJson(JsonUtils.toJsonString(Response.success(false)))));
 
         Boolean deleteResult = auditClient.delete(999);
         Assertions.assertFalse(deleteResult);
-        System.out.println("✓ Correctly handled non-existent rule delete");
     }
 
     @Test
@@ -472,7 +461,6 @@ public class AuditAlertRuleIntegrationTest {
             Assertions.assertTrue(results[i], "Concurrent operation " + (i + 1) + " should be successful");
         }
 
-        System.out.println("✓ Concurrent operations test successful");
     }
 
     /**

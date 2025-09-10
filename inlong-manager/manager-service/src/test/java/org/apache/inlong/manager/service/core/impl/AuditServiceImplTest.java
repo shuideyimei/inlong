@@ -22,8 +22,8 @@ import org.apache.inlong.manager.dao.mapper.AuditAlertRuleEntityMapper;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
-import org.apache.inlong.manager.pojo.audit.AuditAlertRuleUpdateRequest;
 import org.apache.inlong.manager.service.ServiceBaseTest;
+import org.apache.inlong.manager.service.core.AuditAlertRuleService;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ import java.util.List;
 class AuditServiceImplTest extends ServiceBaseTest {
 
     @Autowired
-    private AuditServiceImpl auditService;
+    private AuditAlertRuleService auditAlertRuleService;
 
     @Autowired
     private AuditAlertRuleEntityMapper auditAlertRuleMapper;
@@ -83,7 +83,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         rule.setVersion(freshEntity.getVersion());
 
         // Update the rule
-        AuditAlertRule updatedRule = auditService.update(rule, "test_user");
+        AuditAlertRule updatedRule = auditAlertRuleService.update(rule, "test_user");
 
         // Verify the update
         Assertions.assertNotNull(updatedRule);
@@ -120,9 +120,10 @@ class AuditServiceImplTest extends ServiceBaseTest {
         request.setNotifyType("EMAIL");
         request.setReceivers("service_request@test.com");
         request.setEnabled(true);
+        request.setVersion(1);
 
         // Create the rule
-        Integer ruleId = auditService.create(request, "test_user");
+        Integer ruleId = auditAlertRuleService.create(request, "test_user");
 
         // Verify the creation
         Assertions.assertNotNull(ruleId);
@@ -149,7 +150,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         AuditAlertRuleEntity freshEntity = auditAlertRuleMapper.selectById(entity.getId());
 
         // Create update request
-        AuditAlertRuleUpdateRequest updateRequest = new AuditAlertRuleUpdateRequest();
+        AuditAlertRuleRequest updateRequest = new AuditAlertRuleRequest();
         updateRequest.setId(freshEntity.getId());
         updateRequest.setLevel("CRITICAL");
         updateRequest.setNotifyType("SMS");
@@ -158,7 +159,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         updateRequest.setVersion(freshEntity.getVersion());
 
         // Update the rule
-        AuditAlertRule updatedRule = auditService.update(updateRequest, "test_user");
+        AuditAlertRule updatedRule = auditAlertRuleService.update(updateRequest, "test_user");
 
         // Verify the update
         Assertions.assertNotNull(updatedRule);
@@ -220,7 +221,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         auditAlertRuleMapper.insert(entity3);
 
         // List enabled rules
-        List<AuditAlertRule> enabledRules = auditService.listEnabled();
+        List<AuditAlertRule> enabledRules = auditAlertRuleService.listEnabled();
 
         // Verify the result
         Assertions.assertNotNull(enabledRules);

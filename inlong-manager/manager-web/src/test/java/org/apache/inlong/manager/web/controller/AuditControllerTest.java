@@ -22,7 +22,6 @@ import org.apache.inlong.manager.dao.mapper.AuditAlertRuleEntityMapper;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
-import org.apache.inlong.manager.pojo.audit.AuditAlertRuleUpdateRequest;
 import org.apache.inlong.manager.web.WebBaseTest;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -109,7 +108,7 @@ class AuditControllerTest extends WebBaseTest {
         request.setEnabled(true);
 
         // Execute create request
-        MvcResult mvcResult = postForSuccessMvcResult("/api/audit/alert/rule", request);
+        MvcResult mvcResult = postForSuccessMvcResult("/api/audit/alert/rule/save", request);
 
         // Verify response
         Integer createdRuleId = getResBodyObj(mvcResult, Integer.class);
@@ -128,7 +127,7 @@ class AuditControllerTest extends WebBaseTest {
         AuditAlertRuleEntity entity = insertTestEntity();
 
         // Execute get request
-        MvcResult mvcResult = getForSuccessMvcResult("/api/audit/alert/rule/{id}", entity.getId());
+        MvcResult mvcResult = getForSuccessMvcResult("/api/audit/alert/rule/get/{id}", entity.getId());
 
         // Verify response
         AuditAlertRule rule = getResBodyObj(mvcResult, AuditAlertRule.class);
@@ -164,7 +163,7 @@ class AuditControllerTest extends WebBaseTest {
         auditAlertRuleMapper.insert(entity2);
 
         // Execute list enabled rules request
-        MvcResult mvcResult = getForSuccessMvcResult("/api/audit/alert/rule/enabled");
+        MvcResult mvcResult = getForSuccessMvcResult("/api/audit/alert/rule/listEnabled");
 
         // Verify response - handle possible null return
         List<AuditAlertRule> rules = null;
@@ -173,7 +172,6 @@ class AuditControllerTest extends WebBaseTest {
         } catch (Exception e) {
             // If there's an exception in parsing, try to get the raw response
             String responseContent = mvcResult.getResponse().getContentAsString();
-            System.out.println("Raw response for list enabled rules: " + responseContent);
             throw e;
         }
 
@@ -220,7 +218,6 @@ class AuditControllerTest extends WebBaseTest {
         } catch (Exception e) {
             // If there's an exception in parsing, try to get the raw response
             String responseContent = mvcResult.getResponse().getContentAsString();
-            System.out.println("Raw response for list with parameters: " + responseContent);
             throw e;
         }
 
@@ -269,7 +266,6 @@ class AuditControllerTest extends WebBaseTest {
         } catch (Exception e) {
             // If there's an exception in parsing, try to get the raw response
             String responseContent = mvcResult.getResponse().getContentAsString();
-            System.out.println("Raw response for list without parameters: " + responseContent);
             throw e;
         }
 
@@ -298,31 +294,37 @@ class AuditControllerTest extends WebBaseTest {
         // Insert test data
         AuditAlertRuleEntity entity = insertTestEntity();
 
-        // Print entity info for debugging
-        System.out.println("Inserted entity ID: " + entity.getId() + ", Version: " + entity.getVersion());
-
         // After inserting, we need to query the entity again to get the actual version from database
         // The version might be set by database triggers or other mechanisms
         AuditAlertRuleEntity freshEntity = auditAlertRuleMapper.selectById(entity.getId());
 
-        // Print fresh entity info for debugging
-        System.out.println("Fresh entity ID: " + freshEntity.getId() + ", Version: " + freshEntity.getVersion());
-        System.out.println("Fresh entity condition: " + freshEntity.getCondition());
-
         // Create update request
-        AuditAlertRuleUpdateRequest updateRequest = new AuditAlertRuleUpdateRequest();
+        AuditAlertRuleRequest updateRequest = new AuditAlertRuleRequest();
         updateRequest.setId(freshEntity.getId());
+        updateRequest.setInlongGroupId(freshEntity.getInlongGroupId());
+        updateRequest.setInlongStreamId(freshEntity.getInlongStreamId());
+        updateRequest.setAuditId(freshEntity.getAuditId());
+        updateRequest.setAlertName(freshEntity.getAlertName());
+        // Parse condition from JSON string to AuditAlertCondition object
+        AuditAlertCondition condition = null;
+        try {
+            condition = org.apache.inlong.manager.common.util.JsonUtils.parseObject(freshEntity.getCondition(),
+                    AuditAlertCondition.class);
+        } catch (Exception e) {
+            condition = new AuditAlertCondition();
+            condition.setType("delay");
+            condition.setOperator(">=");
+            condition.setValue(1000);
+        }
+        updateRequest.setCondition(condition);
         updateRequest.setLevel("CRITICAL");
         updateRequest.setNotifyType("EMAIL");
         updateRequest.setReceivers("updated@example.com");
         updateRequest.setEnabled(false);
         updateRequest.setVersion(freshEntity.getVersion());
 
-        // Print update request info for debugging
-        System.out.println("Update request ID: " + updateRequest.getId() + ", Version: " + updateRequest.getVersion());
-
         MvcResult mvcResult = mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/audit/alert/rule")
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/audit/alert/rule/update")
                         .content(org.apache.inlong.manager.common.util.JsonUtils.toJsonString(updateRequest))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .accept(org.springframework.http.MediaType.APPLICATION_JSON))
@@ -332,13 +334,11 @@ class AuditControllerTest extends WebBaseTest {
         // Instead of directly calling getResBodyObj which might fail,
         // first get the raw response and check if it's successful
         String responseContent = mvcResult.getResponse().getContentAsString();
-        System.out.println("Raw response for update: " + responseContent);
 
         // Parse the response manually
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseContent);
         boolean isSuccess = jsonNode.get("success").asBoolean();
-        System.out.println("isSuccess: " + isSuccess);
 
         if (isSuccess) {
             // If successful, get the data
@@ -359,11 +359,9 @@ class AuditControllerTest extends WebBaseTest {
             // After a successful update, the version should be incremented by 1
             Assertions.assertEquals(freshEntity.getVersion() + 1, updatedEntity.getVersion().intValue());
             Assertions.assertEquals(0, updatedEntity.getIsDeleted().intValue()); // Verify isDeleted
-            System.out.println("Update successful!");
         } else {
             // If not successful, get the error message
             String errMsg = jsonNode.has("errMsg") ? jsonNode.get("errMsg").asText() : "Unknown error";
-            System.out.println("Update failed with error: " + errMsg);
             Assertions.fail("Update failed with error: " + errMsg);
         }
     }
@@ -380,7 +378,7 @@ class AuditControllerTest extends WebBaseTest {
         Assertions.assertEquals(0, retrieved.getIsDeleted().intValue());
 
         // Execute delete request
-        MvcResult mvcResult = deleteForSuccessMvcResult("/api/audit/alert/rule/{id}", ruleId);
+        MvcResult mvcResult = deleteForSuccessMvcResult("/api/audit/delete/{id}", ruleId);
 
         // Verify response
         Boolean deleted = getResBodyObj(mvcResult, Boolean.class);
@@ -403,7 +401,7 @@ class AuditControllerTest extends WebBaseTest {
 
         // Execute create request and expect validation error
         MvcResult mvcResult = mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/audit/alert/rule")
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/audit/alert/rule/save")
                         .content(org.apache.inlong.manager.common.util.JsonUtils.toJsonString(invalidRule))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .accept(org.springframework.http.MediaType.APPLICATION_JSON))
@@ -425,7 +423,7 @@ class AuditControllerTest extends WebBaseTest {
         // Execute get request for non-existent rule
         MvcResult mvcResult = mockMvc.perform(
                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .get("/api/audit/alert/rule/{id}", nonExistentId)
+                        .get("/api/audit/alert/rule/get/{id}", nonExistentId)
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .accept(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
@@ -446,7 +444,7 @@ class AuditControllerTest extends WebBaseTest {
         // Execute delete request for non-existent rule
         MvcResult mvcResult = mockMvc.perform(
                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .delete("/api/audit/alert/rule/{id}", nonExistentId)
+                        .delete("/api/audit/delete/{id}", nonExistentId)
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .accept(org.springframework.http.MediaType.APPLICATION_JSON))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
@@ -470,7 +468,7 @@ class AuditControllerTest extends WebBaseTest {
         Assertions.assertEquals(0, retrieved.getIsDeleted().intValue());
 
         // Execute delete request (soft delete)
-        MvcResult mvcResult = deleteForSuccessMvcResult("/api/audit/alert/rule/{id}", ruleId);
+        MvcResult mvcResult = deleteForSuccessMvcResult("/api/audit/delete/{id}", ruleId);
 
         // Verify response
         Boolean deleted = getResBodyObj(mvcResult, Boolean.class);
