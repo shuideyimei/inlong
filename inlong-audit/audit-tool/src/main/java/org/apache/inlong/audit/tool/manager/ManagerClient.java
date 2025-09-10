@@ -1,23 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.manager;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.inlong.audit.tool.DTO.*;
+import org.apache.inlong.audit.tool.DTO.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
+import org.apache.inlong.audit.tool.DTO.AuditData;
+import org.apache.inlong.audit.tool.DTO.AuditInfo;
+import org.apache.inlong.audit.tool.DTO.AuditRequest;
+import org.apache.inlong.audit.tool.DTO.AuditVO;
 import org.apache.inlong.audit.tool.config.AppConfig;
+import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.CommonBeanUtils;
 import org.apache.inlong.audit.tool.util.HttpUtils;
-import org.apache.inlong.audit.tool.response.Response;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import java.util.stream.Collectors;
 
 /**
@@ -76,8 +96,8 @@ public class ManagerClient {
                 HttpMethod.GET,
                 null,
                 null,
-                new ParameterizedTypeReference<>() {}
-        );
+                new ParameterizedTypeReference<>() {
+                });
 
         LOGGER.info("success to query audit info for url ={}", url);
 
@@ -122,7 +142,8 @@ public class ManagerClient {
             // Construct the API endpoint URL ensuring proper slash formatting
             String managerUrl = appConfig.getManagerUrl(); // e.g. "http://localhost:8080"
             String path = "/audit/listAll";
-            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
+            String url =
+                    (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
 
             // Serialize the request object to JSON
             String jsonBody = mapper.writeValueAsString(auditRequest);
@@ -136,8 +157,8 @@ public class ManagerClient {
                     HttpMethod.POST,
                     jsonBody,
                     null,
-                    new ParameterizedTypeReference<>(){}
-            );
+                    new ParameterizedTypeReference<>() {
+                    });
 
             LOGGER.info("Successfully queried audit info for url={}", url);
 

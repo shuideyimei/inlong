@@ -17,14 +17,15 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
+import org.apache.inlong.audit.tool.DTO.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData.AlertInfo;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.apache.inlong.audit.tool.DTO.MetricData;
-import org.apache.inlong.audit.tool.DTO.MetricData.AlertInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,8 +81,7 @@ class PrometheusReporterTest {
         // Arrange
         AlertInfo alertInfo = new AlertInfo("DATA_LOSS");
         MetricData metricData = new MetricData(
-                "group-1", "stream-1", null, alertInfo
-        );
+                "group-1", "stream-1", null, alertInfo);
 
         // Act
         reporter.report(metricData);
@@ -89,16 +89,14 @@ class PrometheusReporterTest {
         // Assert
         String metrics = scrapeMetrics();
         assertThat(metrics).contains(
-                "inlong_audit_tool_alerts_total{groupId=\"group-1\",streamId=\"stream-1\",alertType=\"DATA_LOSS\",} 1.0"
-        );
+                "inlong_audit_tool_alerts_total{groupId=\"group-1\",streamId=\"stream-1\",alertType=\"DATA_LOSS\",} 1.0");
     }
 
     @Test
     void testReportDataLossRate() throws IOException {
         // Arrange
         MetricData metricData = new MetricData(
-                "group-2", "stream-2", 0.99, null
-        );
+                "group-2", "stream-2", 0.99, null);
 
         // Act
         reporter.report(metricData);
@@ -106,8 +104,7 @@ class PrometheusReporterTest {
         // Assert
         String metrics = scrapeMetrics();
         assertThat(metrics).contains(
-                "inlong_audit_tool_data_loss_rate{groupId=\"group-2\",streamId=\"stream-2\",} 0.99"
-        );
+                "inlong_audit_tool_data_loss_rate{groupId=\"group-2\",streamId=\"stream-2\",} 0.99");
     }
 
     @Test
@@ -115,8 +112,7 @@ class PrometheusReporterTest {
         // Arrange
         AlertInfo alertInfo = new AlertInfo("HIGH_DELAY");
         MetricData metricData = new MetricData(
-                "group-3", "stream-3", 0.05, alertInfo
-        );
+                "group-3", "stream-3", 0.05, alertInfo);
 
         // Act
         reporter.report(metricData);
@@ -125,7 +121,8 @@ class PrometheusReporterTest {
         // Assert
         String metrics = scrapeMetrics();
         assertThat(metrics)
-                .contains("inlong_audit_tool_alerts_total{groupId=\"group-3\",streamId=\"stream-3\",alertType=\"HIGH_DELAY\",} 2.0")
+                .contains(
+                        "inlong_audit_tool_alerts_total{groupId=\"group-3\",streamId=\"stream-3\",alertType=\"HIGH_DELAY\",} 2.0")
                 .contains("inlong_audit_tool_data_loss_rate{groupId=\"group-3\",streamId=\"stream-3\",} 0.05");
     }
 }
@@ -157,9 +154,7 @@ class OpenTelemetryReporterTest {
         reporter.meter.gaugeBuilder(AUDIT_TOOL_DATA_LOSS_RATE)
                 .setDescription(DESC_AUDIT_TOOL_DATA_LOSS_RATE)
                 .buildWithCallback(measurement -> {
-                    reporter.dataLossRateValues.forEach((attributes, value) ->
-                            measurement.record(value, attributes)
-                    );
+                    reporter.dataLossRateValues.forEach((attributes, value) -> measurement.record(value, attributes));
                 });
     }
 
@@ -168,8 +163,7 @@ class OpenTelemetryReporterTest {
         // Arrange
         AlertInfo alertInfo = new AlertInfo("DATA_LOSS");
         MetricData metricData = new MetricData(
-                "group-1", "stream-1", null, alertInfo
-        );
+                "group-1", "stream-1", null, alertInfo);
 
         // Act
         reporter.report(metricData);
@@ -187,8 +181,7 @@ class OpenTelemetryReporterTest {
                                 assertThat(point.getAttributes()).isEqualTo(Attributes.of(
                                         AttributeKey.stringKey(KEY_GROUP_ID), "group-1",
                                         AttributeKey.stringKey(KEY_STREAM_ID), "stream-1",
-                                        AttributeKey.stringKey(KEY_ALERT_TYPE), "DATA_LOSS"
-                                ));
+                                        AttributeKey.stringKey(KEY_ALERT_TYPE), "DATA_LOSS"));
                             });
                 });
     }
@@ -197,8 +190,7 @@ class OpenTelemetryReporterTest {
     void testReportDataLossRate() {
         // Arrange
         MetricData metricData1 = new MetricData(
-                "group-2", "stream-2", 0.99, null
-        );
+                "group-2", "stream-2", 0.99, null);
         MetricData metricData2 = new MetricData(
                 "group-2", "stream-2", 0.98, null // Update the value
         );
@@ -220,8 +212,7 @@ class OpenTelemetryReporterTest {
                                 assertThat(point.getValue()).isEqualTo(0.98); // Latest value
                                 assertThat(point.getAttributes()).isEqualTo(Attributes.of(
                                         AttributeKey.stringKey(KEY_GROUP_ID), "group-2",
-                                        AttributeKey.stringKey(KEY_STREAM_ID), "stream-2"
-                                ));
+                                        AttributeKey.stringKey(KEY_STREAM_ID), "stream-2"));
                             });
                 });
     }

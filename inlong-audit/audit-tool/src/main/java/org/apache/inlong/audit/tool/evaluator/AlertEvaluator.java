@@ -1,17 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.evaluator;
 
-import lombok.Getter;
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.DTO.MetricData;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlertEvaluator {
+
     private final PrometheusReporter prometheusReporter;
     private final OpenTelemetryReporter openTelemetryReporter;
     @Getter
@@ -21,7 +40,8 @@ public class AlertEvaluator {
     @Getter
     private AlertPolicy alertpolicy;
 
-    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient) {
+    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+            ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
@@ -60,10 +80,8 @@ public class AlertEvaluator {
 
         double dataLossRate = auditData.getDataLossRate();
 
-
         double threshold = alertPolicy.getThreshold();
         String comparisonOperator = alertPolicy.getComparisonOperator();
-
 
         switch (comparisonOperator) {
             case ">":
