@@ -48,7 +48,7 @@ public class AuditCheckTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
 
     public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
-                          ManagerClient managerClient, AlertEvaluator alertEvaluator) {
+            ManagerClient managerClient, AlertEvaluator alertEvaluator) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
@@ -117,12 +117,9 @@ public class AuditCheckTask {
             }
         }
 
-        // Terminate thread if not successful after 10 minutes
         if (!success) {
             LOGGER.error("Failed to check audit data after {} attempts and {} minutes. Terminating thread.",
                     attempt, 10);
-            scheduler.shutdownNow();
-            Thread.currentThread().interrupt();
         }
     }
 
