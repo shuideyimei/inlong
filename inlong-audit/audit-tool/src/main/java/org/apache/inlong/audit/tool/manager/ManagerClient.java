@@ -90,13 +90,13 @@ public class ManagerClient {
         LOGGER.info("begin query audit alertRule list request={}");
 
         // Send HTTP GET request to the manager API to retrieve audit alert rules
-        Response<List<AuditAlertRule>> result = (Response<List<AuditAlertRule>>) HttpUtils.request(
+        Response<List<AuditAlertRule>> result = HttpUtils.request(
                 restTemplate,
                 url,
                 HttpMethod.GET,
                 null,
                 null,
-                new ParameterizedTypeReference<List<AuditAlertRule>>() {
+                new ParameterizedTypeReference<Response<List<AuditAlertRule>>>() {
                 });
 
         LOGGER.info("success to query audit info for url ={}", url);
@@ -140,7 +140,7 @@ public class ManagerClient {
                     .collect(Collectors.toList()));
 
             // Construct the API endpoint URL ensuring proper slash formatting
-            String managerUrl = appConfig.getManagerUrl(); // e.g. "http://localhost:8080"
+            String managerUrl = appConfig.getManagerUrl();
             String path = "/audit/listAll";
             String url =
                     (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
@@ -151,13 +151,13 @@ public class ManagerClient {
             LOGGER.info("Querying audit data list with request={}", auditRequest);
 
             // Send POST request to manager API to fetch audit data
-            Response<List<AuditVO>> result = (Response<List<AuditVO>>) HttpUtils.request(
+            Response<List<AuditVO>> result = HttpUtils.request(
                     restTemplate,
                     url,
                     HttpMethod.POST,
                     jsonBody,
                     null,
-                    new ParameterizedTypeReference<List<AuditVO>>() {
+                    new ParameterizedTypeReference<Response<List<AuditVO>>>() {
                     });
 
             LOGGER.info("Successfully queried audit info for url={}", url);
