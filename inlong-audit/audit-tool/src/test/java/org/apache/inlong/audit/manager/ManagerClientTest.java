@@ -60,7 +60,7 @@ class ManagerClientTest {
     @InjectMocks
     private ManagerClient managerClient;
 
-    private final String testManagerUrl = "http://localhot:8080";
+    private final String testManagerUrl = "http://localhost:8080";
 
 
     @Test
