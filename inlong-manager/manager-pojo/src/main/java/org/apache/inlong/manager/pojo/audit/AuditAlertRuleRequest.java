@@ -17,22 +17,22 @@
 
 package org.apache.inlong.manager.pojo.audit;
 
+import org.apache.inlong.manager.common.validation.UpdateValidation;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
-import java.util.Date;
-
 @Data
-@ApiModel("Audit Alert Rule Configuration")
-public class AuditAlertRule {
+@ApiModel("Audit Alert Rule Request")
+public class AuditAlertRuleRequest {
 
-    @ApiModelProperty("Rule ID")
+    @ApiModelProperty(value = "Primary key")
+    @NotNull(groups = UpdateValidation.class, message = "Rule ID cannot be null for update")
     private Integer id;
 
     @ApiModelProperty(value = "Associated InLong Group ID", required = true)
@@ -52,7 +52,6 @@ public class AuditAlertRule {
 
     @ApiModelProperty(value = "Trigger condition", required = true)
     @NotNull(message = "Trigger condition cannot be null")
-    @Valid
     private AuditAlertCondition condition;
 
     @ApiModelProperty("Alert level (INFO/WARN/ERROR/CRITICAL)")
@@ -70,21 +69,8 @@ public class AuditAlertRule {
     @NotNull(message = "Enabled status cannot be null")
     private Boolean enabled;
 
-    @ApiModelProperty("Whether deleted")
-    private Integer isDeleted; // Use Integer to match database int(11) type
+    @ApiModelProperty(value = "Version number")
+    @NotNull(groups = UpdateValidation.class, message = "Version cannot be null for update")
+    private Integer version;
 
-    @ApiModelProperty("Creator name")
-    private String creator;
-
-    @ApiModelProperty("Modifier name")
-    private String modifier;
-
-    @ApiModelProperty("Create time")
-    private Date createTime;
-
-    @ApiModelProperty("Modify time")
-    private Date modifyTime;
-
-    @ApiModelProperty("Version number")
-    private Integer version; // Add version field
 }

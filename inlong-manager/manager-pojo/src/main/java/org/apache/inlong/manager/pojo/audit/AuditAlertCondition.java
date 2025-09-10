@@ -15,29 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.manager.dao.entity;
+package org.apache.inlong.manager.pojo.audit;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.Date;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
-public class AuditAlertRuleEntity {
+@ApiModel("Audit Alert Condition")
+public class AuditAlertCondition {
 
-    private Integer id;
-    private String inlongGroupId;
-    private String inlongStreamId;
-    private String auditId;
-    private String alertName;
-    private String condition; // Keep as String for database storage (JSON format)
-    private String level;
-    private String notifyType;
-    private String receivers;
-    private Boolean enabled;
-    private Integer isDeleted; // Use Integer to match database int(11) type
-    private String creator;
-    private String modifier;
-    private Date createTime;
-    private Date modifyTime; // Modify time
-    private Integer version; // Add version field
+    @ApiModelProperty(value = "Condition type (e.g., data_loss, delay, count)", required = true)
+    @NotBlank(message = "Condition type cannot be blank")
+    private String type;
+
+    @ApiModelProperty(value = "Operator for comparison (e.g., >, <, >=, <=, ==, !=)", required = true)
+    @NotBlank(message = "Operator cannot be blank")
+    private String operator;
+
+    @ApiModelProperty(value = "Value for comparison", required = true)
+    @NotNull(message = "Value cannot be null")
+    private Object value;
+
 }
