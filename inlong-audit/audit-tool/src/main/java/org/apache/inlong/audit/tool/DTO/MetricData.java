@@ -55,6 +55,12 @@ public class MetricData {
 
     public MetricData(Object groupId, Object streamId, Object dataLossRate, Object dataLossCount, Object auditCount,
             Object expectedCount, Object receivedCount) {
+<<<<<<< Updated upstream
+=======
+        this.groupId = (String) groupId;
+        this.streamId = (String) streamId;
+        this.dataLossRate = (Double) dataLossRate;
+>>>>>>> Stashed changes
     }
 
     /**
