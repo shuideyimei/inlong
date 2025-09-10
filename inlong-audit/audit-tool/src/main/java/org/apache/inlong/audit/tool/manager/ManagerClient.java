@@ -20,22 +20,13 @@ package org.apache.inlong.audit.tool.manager;
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
-<<<<<<< Updated upstream
 import org.apache.inlong.audit.tool.DTO.AuditInfo;
 import org.apache.inlong.audit.tool.DTO.AuditRequest;
 import org.apache.inlong.audit.tool.DTO.AuditVO;
-=======
->>>>>>> Stashed changes
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.CommonBeanUtils;
 import org.apache.inlong.audit.tool.util.HttpUtils;
-<<<<<<< Updated upstream
-=======
-import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
-import org.apache.inlong.manager.pojo.audit.AuditRequest;
-import org.apache.inlong.manager.pojo.audit.AuditVO;
->>>>>>> Stashed changes
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -81,7 +72,6 @@ public class ManagerClient {
         // Convert AuditAlertRule objects to AlertPolicy objects using property copying
         return CommonBeanUtils.copyListProperties(auditAlertRules, AlertPolicy::new);
     }
-<<<<<<< Updated upstream
     /**
      * Fetches the list of audit alert rules from the manager API.
      * Constructs the request URL, sends an HTTP GET request, and processes the response.
@@ -90,55 +80,36 @@ public class ManagerClient {
      */
     public List<AuditAlertRule> fetchAlertRules() {
         // Get the manager URL from app configuration
-=======
-
-    public List<AuditAlertRule> fetchAlertRules() {
->>>>>>> Stashed changes
         String managerUrl = appConfig.getManagerUrl();
         String path = "/audit/alert/rule/list";
         RestTemplate restTemplate = new RestTemplate();
 
         // Ensure there is only one forward slash between the base URL and path
         String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
-<<<<<<< Updated upstream
 
         LOGGER.info("begin query audit alertRule list request={}");
 
         // Send HTTP GET request to the manager API to retrieve audit alert rules
-        Response<List<AuditAlertRule>> result = HttpUtils.request(
+        Response<List<AuditAlertRule>> result = (Response<List<AuditAlertRule>>) HttpUtils.request(
                 restTemplate,
-=======
-        // 发送http请求manger API获取AuditAlertRule告警策略
-        Response<List<AuditAlertRule>> result = HttpUtils.request(restTemplate,
->>>>>>> Stashed changes
                 url,
                 HttpMethod.GET,
                 null,
                 null,
-<<<<<<< Updated upstream
-                new ParameterizedTypeReference<>() {
+                new ParameterizedTypeReference<List<AuditAlertRule>>() {
                 });
 
-=======
-                new ParameterizedTypeReference<Response<List<AuditAlertRule>>>() {
-                });
->>>>>>> Stashed changes
         LOGGER.info("success to query audit info for url ={}", url);
 
         if (result.isSuccess()) {
             // Copy and return the list of audit alert rules
             return result.getData();
         } else {
-<<<<<<< Updated upstream
             LOGGER.error("fetchAlertPolicies fail: " + result.getData());
-=======
-            LOGGER.error("fetchAlertPolicies fail " + ": " + result.getData());
->>>>>>> Stashed changes
             return null;
         }
     }
 
-<<<<<<< Updated upstream
     /**
      * Fetches audit data by retrieving audit alert rules and querying detailed audit information for each rule.
      *
@@ -149,17 +120,12 @@ public class ManagerClient {
      * @see #fetchAlertRules()
      * @see CommonBeanUtils#copyListProperties(List, java.util.function.Supplier)
      */
-=======
->>>>>>> Stashed changes
     public List<AuditData> fetchAuditData() throws Exception {
         // Retrieve all audit alert rules from the manager API
         List<AuditAlertRule> auditAlertRules = fetchAlertRules();
         List<AuditData> auditDataList = new ArrayList<>();
-<<<<<<< Updated upstream
 
         // Process each audit alert rule to fetch corresponding audit data
-=======
->>>>>>> Stashed changes
         for (AuditAlertRule auditAlertRule : auditAlertRules) {
             ObjectMapper mapper = new ObjectMapper();
 
@@ -176,10 +142,6 @@ public class ManagerClient {
             // Construct the API endpoint URL ensuring proper slash formatting
             String managerUrl = appConfig.getManagerUrl(); // e.g. "http://localhost:8080"
             String path = "/audit/listAll";
-<<<<<<< Updated upstream
-=======
-            // 确保只出现一个斜杠
->>>>>>> Stashed changes
             String url =
                     (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
 
@@ -189,23 +151,17 @@ public class ManagerClient {
             LOGGER.info("Querying audit data list with request={}", auditRequest);
 
             // Send POST request to manager API to fetch audit data
-            Response<List<AuditVO>> result = HttpUtils.request(
+            Response<List<AuditVO>> result = (Response<List<AuditVO>>) HttpUtils.request(
                     restTemplate,
                     url,
                     HttpMethod.POST,
                     jsonBody,
                     null,
-<<<<<<< Updated upstream
-                    new ParameterizedTypeReference<>() {
+                    new ParameterizedTypeReference<List<AuditVO>>() {
                     });
 
             LOGGER.info("Successfully queried audit info for url={}", url);
 
-=======
-                    new ParameterizedTypeReference<Response<List<AuditVO>>>() {
-                    });
-            LOGGER.info("success to query audit info for url ={}", url);
->>>>>>> Stashed changes
             if (result.isSuccess()) {
                 // Convert and return the successful response data
                 List<AuditVO> auditVOList = result.getData();

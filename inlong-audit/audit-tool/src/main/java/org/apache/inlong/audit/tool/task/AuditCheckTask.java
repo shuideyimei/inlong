@@ -25,11 +25,8 @@ import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 
 import lombok.Getter;
-<<<<<<< Updated upstream
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-=======
->>>>>>> Stashed changes
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -48,13 +45,10 @@ public class AuditCheckTask {
     @Getter
     private OpenTelemetryReporter openTelemetryReporter;
     private final ManagerClient managerClient;
-<<<<<<< Updated upstream
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
-=======
->>>>>>> Stashed changes
 
     public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
-            ManagerClient managerClient, AlertEvaluator alertEvaluator) {
+                          ManagerClient managerClient, AlertEvaluator alertEvaluator) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
@@ -72,7 +66,6 @@ public class AuditCheckTask {
      * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
-<<<<<<< Updated upstream
         final long startTime = System.currentTimeMillis();
         final long timeoutMillis = 10 * 60 * 1000; // 10 minutes timeout
         int attempt = 0;
@@ -95,20 +88,6 @@ public class AuditCheckTask {
                         if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
                             alertEvaluator.triggerAlert(auditData, policy);
                         }
-=======
-        try {
-            // 获取审计数据
-            List<AuditData> auditDataList = managerClient.fetchAuditData();
-
-            // 获取告警策略
-            List<AlertPolicy> policies = managerClient.fetchAlertPolicies();
-
-            // 对每个审计数据和每个策略进行评估
-            for (AuditData auditData : auditDataList) {
-                for (AlertPolicy policy : policies) {
-                    if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
-                        alertEvaluator.triggerAlert(auditData, policy);
->>>>>>> Stashed changes
                     }
                 }
 

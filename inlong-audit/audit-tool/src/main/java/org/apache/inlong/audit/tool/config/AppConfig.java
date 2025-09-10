@@ -23,11 +23,7 @@ import java.util.Properties;
  */
 public class AppConfig {
 
-<<<<<<< Updated upstream
     private Properties properties;
-=======
-    protected Properties properties;
->>>>>>> Stashed changes
 
     public AppConfig() {
         properties = new Properties();
