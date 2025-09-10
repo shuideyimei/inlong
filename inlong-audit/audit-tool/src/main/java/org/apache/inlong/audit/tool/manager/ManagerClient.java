@@ -83,6 +83,7 @@ public class ManagerClient {
         String managerUrl = appConfig.getManagerUrl();
         String path = "/audit/alert/rule/list";
         RestTemplate restTemplate = new RestTemplate();
+        List<AuditAlertRule> auditAlertRuleList = new ArrayList<>();
 
         // Ensure there is only one forward slash between the base URL and path
         String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
@@ -103,10 +104,11 @@ public class ManagerClient {
 
         if (result.isSuccess()) {
             // Copy and return the list of audit alert rules
-            return result.getData();
+            auditAlertRuleList = result.getData();
+            return auditAlertRuleList;
         } else {
-            LOGGER.error("fetchAlertPolicies fail: " + result.getData());
-            return null;
+            LOGGER.error("fetchAlertPolicies fail: {}", result.getErrMsg());
+            return auditAlertRuleList;
         }
     }
 
@@ -171,7 +173,7 @@ public class ManagerClient {
                         .collect(Collectors.toList());;
                 return CommonBeanUtils.copyListProperties(auditInfoList, AuditData::new);
             } else {
-                LOGGER.error("Failed to fetch audit data: {}", result.getData());
+                LOGGER.error("Failed to fetch audit data: {}", result.getErrMsg());
             }
         }
 

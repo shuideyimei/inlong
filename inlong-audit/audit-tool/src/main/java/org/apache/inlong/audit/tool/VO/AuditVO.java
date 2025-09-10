@@ -17,9 +17,10 @@
 
 package org.apache.inlong.audit.tool.VO;
 
+import org.apache.inlong.audit.tool.DTO.AuditInfo;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.apache.inlong.audit.tool.DTO.AuditInfo;
 
 import java.util.List;
 
