@@ -22,7 +22,7 @@ import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.DTO.AuditInfo;
 import org.apache.inlong.audit.tool.DTO.AuditRequest;
-import org.apache.inlong.audit.tool.DTO.AuditVO;
+import org.apache.inlong.audit.tool.VO.AuditVO;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.CommonBeanUtils;
