@@ -21,6 +21,7 @@ package org.apache.inlong.audit.tool.basemetric.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.basemetric.vo.AuditDataVo;
 
 import java.util.List;
@@ -29,4 +30,8 @@ import java.util.List;
 public interface AuditMapper {
     @Select("SELECT * FROM audit_data WHERE log_ts > NOW() - INTERVAL #{seconds} SECOND")
     List<AuditDataVo> queryAuditDataBySeconds(@Param("seconds") Integer seconds);
+
+    @Select("select inlong_group_id as inlongGroupId,inlong_stream_id as inlongStreamId, sum(count) count" +
+            " from audit_data where audit_id = #{audit_id} group by inlong_group_id,inlong_stream_id")
+    List<AuditMetricVo> queryDataproxyAuditMetric(@Param("log_ts")String logTs,@Param("audit_id")String auditId);
 }
