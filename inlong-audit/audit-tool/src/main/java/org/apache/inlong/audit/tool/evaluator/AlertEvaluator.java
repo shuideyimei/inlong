@@ -18,8 +18,11 @@
 package org.apache.inlong.audit.tool.evaluator;
 
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.DTO.MetricData;
+import  org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
+import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
@@ -74,31 +77,107 @@ public class AlertEvaluator {
         return enabledPlatforms;
     }
 
-    public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
-        this.auditData = auditData;
-        this.alertpolicy = alertPolicy;
+//    public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
+//        this.auditData = auditData;
+//        this.alertpolicy = alertPolicy;
+//
+//        double dataLossRate = auditData.getDataLossRate();
+//
+//        double threshold = alertPolicy.getThreshold();
+//        String comparisonOperator = alertPolicy.getComparisonOperator();
+//
+//        switch (comparisonOperator) {
+//            case ">":
+//                return dataLossRate > threshold;
+//            case ">=":
+//                return dataLossRate >= threshold;
+//            case "<":
+//                return dataLossRate < threshold;
+//            case "<=":
+//                return dataLossRate <= threshold;
+//            case "==":
+//                return dataLossRate == threshold;
+//            case "!=":
+//                return dataLossRate != threshold;
+//            default:
+//                return false;
+//        }
+//    }
 
-        double dataLossRate = auditData.getDataLossRate();
+    public boolean shouldTriggerAlert(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> hiveMetrics, 
+                                    List<AuditMetricVo> icebergMetrics, AuditAlertRule alertRule) {
+        return checkDataProxyWithHive(dataProxyMetrics, hiveMetrics, alertRule) || 
+               checkDataProxyWithIceberg(dataProxyMetrics, icebergMetrics, alertRule);
+    }
 
-        double threshold = alertPolicy.getThreshold();
-        String comparisonOperator = alertPolicy.getComparisonOperator();
-
-        switch (comparisonOperator) {
-            case ">":
-                return dataLossRate > threshold;
-            case ">=":
-                return dataLossRate >= threshold;
-            case "<":
-                return dataLossRate < threshold;
-            case "<=":
-                return dataLossRate <= threshold;
-            case "==":
-                return dataLossRate == threshold;
-            case "!=":
-                return dataLossRate != threshold;
-            default:
-                return false;
+    private boolean checkDataProxyWithHive(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> hiveMetrics, 
+                                         AuditAlertRule alertRule) {
+        if (dataProxyMetrics != null && hiveMetrics != null) {
+            AuditAlertCondition condition = alertRule.getCondition();
+            double threshold = condition.getValue();
+            
+            for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
+                for (AuditMetricVo hiveMetric : hiveMetrics) {
+                    if (dataProxyMetric.getInlongGroupId().equals(hiveMetric.getInlongGroupId()) &&
+                        dataProxyMetric.getInlongStreamId().equals(hiveMetric.getInlongStreamId())) {
+                        long countDifference = Math.abs(dataProxyMetric.getCount() - hiveMetric.getCount());
+                        // 根据操作符比较差值和阈值
+                        switch (condition.getOperator()) {
+                            case ">":
+                                return countDifference > threshold;
+                            case ">=":
+                                return countDifference >= threshold;
+                            case "<":
+                                return countDifference < threshold;
+                            case "<=":
+                                return countDifference <= threshold;
+                            case "==":
+                                return countDifference == threshold;
+                            case "!=":
+                                return countDifference != threshold;
+                            default:
+                                return false;
+                        }
+                    }
+                }
+            }
         }
+        return false;
+    }
+
+    private boolean checkDataProxyWithIceberg(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> icebergMetrics, 
+                                            AuditAlertRule alertRule) {
+        if (dataProxyMetrics != null && icebergMetrics != null) {
+            AuditAlertCondition condition = alertRule.getCondition();
+            double threshold = condition.getValue();
+            
+            for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
+                for (AuditMetricVo icebergMetric : icebergMetrics) {
+                    if (dataProxyMetric.getInlongGroupId().equals(icebergMetric.getInlongGroupId()) &&
+                        dataProxyMetric.getInlongStreamId().equals(icebergMetric.getInlongStreamId())) {
+                        long countDifference = Math.abs(dataProxyMetric.getCount() - icebergMetric.getCount());
+                        // 根据操作符比较差值和阈值
+                        switch (condition.getOperator()) {
+                            case ">":
+                                return countDifference > threshold;
+                            case ">=":
+                                return countDifference >= threshold;
+                            case "<":
+                                return countDifference < threshold;
+                            case "<=":
+                                return countDifference <= threshold;
+                            case "==":
+                                return countDifference == threshold;
+                            case "!=":
+                                return countDifference != threshold;
+                            default:
+                                return false;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public void triggerAlert(AuditData auditData, AlertPolicy policy) {

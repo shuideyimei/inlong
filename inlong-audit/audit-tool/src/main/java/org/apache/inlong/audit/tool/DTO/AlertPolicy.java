@@ -57,6 +57,8 @@ public class AlertPolicy {
     }
 
     public List<String> getTargets() {
+        //默认是promethus
+        //todo：完善getTargets方法
         return Collections.singletonList("promethus");
     }
 
