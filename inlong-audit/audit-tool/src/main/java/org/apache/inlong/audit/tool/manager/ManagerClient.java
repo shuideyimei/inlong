@@ -54,25 +54,6 @@ public class ManagerClient {
     }
 
     /**
-     * Fetches alert policies by retrieving audit alert rules and converting them to alert policy objects.
-     *
-     * This method first calls {@link #fetchAlertRules()} to get the list of audit alert rules,
-     * then converts them to {@link AlertPolicy} objects using property copying.
-     *
-     * @return List of converted {@link AlertPolicy} objects
-     * @throws Exception if there's an error during the fetch or conversion process
-     *
-     * @see #fetchAlertRules()
-     * @see CommonBeanUtils#copyListProperties(List, java.util.function.Supplier)
-     */
-    public List<AlertPolicy> fetchAlertPolicies() throws Exception {
-        // Retrieve the list of audit alert rules from the manager API
-        List<AuditAlertRule> auditAlertRules = fetchAlertRules();
-
-        // Convert AuditAlertRule objects to AlertPolicy objects using property copying
-        return CommonBeanUtils.copyListProperties(auditAlertRules, AlertPolicy::new);
-    }
-    /**
      * Fetches the list of audit alert rules from the manager API.
      * Constructs the request URL, sends an HTTP GET request, and processes the response.
      *
