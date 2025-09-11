@@ -13,9 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AuditMetricService {
     private Integer intervalTimeMinute;
@@ -117,5 +116,60 @@ public class AuditMetricService {
                 .withSecond(0) // 秒置 00
                 .minusMinutes(intervalTimeMinute) // 减分钟
                 .format(LOGTS_FMT);
+    }
+
+    //模拟生成假数据
+    public Map<String, List<AuditMetricVo>> generateTestData() {
+        Map<String, List<AuditMetricVo>> result = new HashMap<>();
+        List<AuditMetricVo> dataproxy = new ArrayList<>(1000);
+        List<AuditMetricVo> iceberg  = new ArrayList<>(500);
+        List<AuditMetricVo> hive     = new ArrayList<>(500);
+
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+
+        /* 1. 生成 1000 条 DataProxy 指标，groupId / streamId 全局唯一 */
+        for (int i = 0; i < 1000; i++) {
+            AuditMetricVo vo = new AuditMetricVo();
+            vo.setInlongGroupId("g_" + i);
+            vo.setInlongStreamId("s_" + i);
+            vo.setCount(rnd.nextLong(10, 10000));
+            dataproxy.add(vo);
+        }
+
+        /* 2. 随机 50 % 变成 Iceberg，10 % 概率把 count 改小 */
+        Collections.shuffle(dataproxy, rnd);
+        for (int i = 0; i < 500; i++) {
+            AuditMetricVo copy = clone(dataproxy.get(i));
+            if (rnd.nextDouble() < 0.1) { // 10 % 概率
+                long reduce = 1 + (long) (copy.getCount() * rnd.nextDouble(0.01, 0.10));
+                copy.setCount(Math.max(1L, copy.getCount() - reduce));
+            }
+            iceberg.add(copy);
+        }
+
+        /* 3. 再随机 50 % 变成 Hive，同样 10 % 概率把 count 改小 */
+        Collections.shuffle(dataproxy, rnd);
+        for (int i = 0; i < 500; i++) {
+            AuditMetricVo copy = clone(dataproxy.get(i));
+            if (rnd.nextDouble() < 0.1) {
+                long reduce = 1 + (long) (copy.getCount() * rnd.nextDouble(0.01, 0.10));
+                copy.setCount(Math.max(1L, copy.getCount() - reduce));
+            }
+            hive.add(copy);
+        }
+
+        result.put("dataproxy", dataproxy);
+        result.put("iceberg", iceberg);
+        result.put("hive", hive);
+        return result;
+    }
+
+    /* 浅拷贝工具 */
+    private AuditMetricVo clone(AuditMetricVo src) {
+        AuditMetricVo vo = new AuditMetricVo();
+        vo.setInlongGroupId(src.getInlongGroupId());
+        vo.setInlongStreamId(src.getInlongStreamId());
+        vo.setCount(src.getCount());
+        return vo;
     }
 }
