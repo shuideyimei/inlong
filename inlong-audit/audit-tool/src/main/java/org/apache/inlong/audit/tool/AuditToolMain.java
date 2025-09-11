@@ -17,6 +17,7 @@
 
 package org.apache.inlong.audit.tool;
 
+import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
@@ -38,6 +39,9 @@ public class AuditToolMain {
         // Initialize reporters
         PrometheusReporter prometheusReporter = new PrometheusReporter();
         OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter();
+
+        //Database query initialization
+        AuditSQLUtil.initialize(appConfig.getProperties());
 
         // Schedule the audit check task
         AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, openTelemetryReporter, managerClient);

@@ -19,6 +19,7 @@ package org.apache.inlong.audit.tool.task;
 
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditData;
+import org.apache.inlong.audit.tool.basemetric.BaseMetricReporter;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
@@ -46,6 +47,7 @@ public class AuditCheckTask {
     private OpenTelemetryReporter openTelemetryReporter;
     private final ManagerClient managerClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
+    private final BaseMetricReporter baseMetricReporter;
 
     public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
             ManagerClient managerClient, AlertEvaluator alertEvaluator) {
@@ -53,6 +55,7 @@ public class AuditCheckTask {
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
         this.alertEvaluator = alertEvaluator;
+        this.baseMetricReporter =new BaseMetricReporter(prometheusReporter.getRegistry());
     }
 
     /**
@@ -67,9 +70,16 @@ public class AuditCheckTask {
      */
     private void checkAuditData() {
         final long startTime = System.currentTimeMillis();
-        final long timeoutMillis = 10 * 60 * 1000; // 10 minutes timeout
+        final long timeoutMillis = 10  * 1000; // 10 minutes timeout
         int attempt = 0;
         boolean success = false;
+
+        //Report basic indicator data
+        try {
+            baseMetricReporter.reportBaseMetric();
+        }catch (Exception e){
+            LOGGER.error("An exception occurred during the process of reporting basic indicator data!"+e.getMessage());
+        }
 
         while (!success && (System.currentTimeMillis() - startTime) < timeoutMillis) {
             attempt++;

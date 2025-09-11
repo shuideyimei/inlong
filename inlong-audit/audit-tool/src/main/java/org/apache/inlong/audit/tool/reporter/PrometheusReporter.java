@@ -153,4 +153,8 @@ public class PrometheusReporter implements MetricReporter {
             registry.clear();
         }
     }
+
+    public CollectorRegistry getRegistry(){
+        return this.registry;
+    }
 }
