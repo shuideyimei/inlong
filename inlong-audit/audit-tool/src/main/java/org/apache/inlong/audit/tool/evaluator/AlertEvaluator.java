@@ -77,85 +77,21 @@ public class AlertEvaluator {
         return enabledPlatforms;
     }
 
-//    public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
-//        this.auditData = auditData;
-//        this.alertpolicy = alertPolicy;
-//
-//        double dataLossRate = auditData.getDataLossRate();
-//
-//        double threshold = alertPolicy.getThreshold();
-//        String comparisonOperator = alertPolicy.getComparisonOperator();
-//
-//        switch (comparisonOperator) {
-//            case ">":
-//                return dataLossRate > threshold;
-//            case ">=":
-//                return dataLossRate >= threshold;
-//            case "<":
-//                return dataLossRate < threshold;
-//            case "<=":
-//                return dataLossRate <= threshold;
-//            case "==":
-//                return dataLossRate == threshold;
-//            case "!=":
-//                return dataLossRate != threshold;
-//            default:
-//                return false;
-//        }
-//    }
-
-    public boolean shouldTriggerAlert(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> hiveMetrics, 
-                                    List<AuditMetricVo> icebergMetrics, AuditAlertRule alertRule) {
-        return checkDataProxyWithHive(dataProxyMetrics, hiveMetrics, alertRule) || 
-               checkDataProxyWithIceberg(dataProxyMetrics, icebergMetrics, alertRule);
+    public boolean shouldTriggerAlert(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, AuditAlertRule alertRule) {
+        return checkDataProxyWithStorage(dataProxyMetrics, storageMetrics, alertRule);
     }
 
-    private boolean checkDataProxyWithHive(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> hiveMetrics, 
+    private boolean checkDataProxyWithStorage(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, 
                                          AuditAlertRule alertRule) {
-        if (dataProxyMetrics != null && hiveMetrics != null) {
+        if (dataProxyMetrics != null && storageMetrics != null) {
             AuditAlertCondition condition = alertRule.getCondition();
             double threshold = condition.getValue();
             
             for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
-                for (AuditMetricVo hiveMetric : hiveMetrics) {
-                    if (dataProxyMetric.getInlongGroupId().equals(hiveMetric.getInlongGroupId()) &&
-                        dataProxyMetric.getInlongStreamId().equals(hiveMetric.getInlongStreamId())) {
-                        long countDifference = Math.abs(dataProxyMetric.getCount() - hiveMetric.getCount());
-                        // 根据操作符比较差值和阈值
-                        switch (condition.getOperator()) {
-                            case ">":
-                                return countDifference > threshold;
-                            case ">=":
-                                return countDifference >= threshold;
-                            case "<":
-                                return countDifference < threshold;
-                            case "<=":
-                                return countDifference <= threshold;
-                            case "==":
-                                return countDifference == threshold;
-                            case "!=":
-                                return countDifference != threshold;
-                            default:
-                                return false;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean checkDataProxyWithIceberg(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> icebergMetrics, 
-                                            AuditAlertRule alertRule) {
-        if (dataProxyMetrics != null && icebergMetrics != null) {
-            AuditAlertCondition condition = alertRule.getCondition();
-            double threshold = condition.getValue();
-            
-            for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
-                for (AuditMetricVo icebergMetric : icebergMetrics) {
-                    if (dataProxyMetric.getInlongGroupId().equals(icebergMetric.getInlongGroupId()) &&
-                        dataProxyMetric.getInlongStreamId().equals(icebergMetric.getInlongStreamId())) {
-                        long countDifference = Math.abs(dataProxyMetric.getCount() - icebergMetric.getCount());
+                for (AuditMetricVo storageMetric : storageMetrics) {
+                    if (dataProxyMetric.getInlongGroupId().equals(storageMetric.getInlongGroupId()) &&
+                        dataProxyMetric.getInlongStreamId().equals(storageMetric.getInlongStreamId())) {
+                        long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
                         // 根据操作符比较差值和阈值
                         switch (condition.getOperator()) {
                             case ">":

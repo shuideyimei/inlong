@@ -18,12 +18,15 @@
 package org.apache.inlong.audit.tool.task;
 
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.basemetric.BaseMetricReporter;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+import org.apache.inlong.audit.tool.service.AuditMetricService;
+import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 
 /**
  * AuditCheckTask class: Periodically fetches audit data and evaluates alert policies.
@@ -48,6 +52,7 @@ public class AuditCheckTask {
     private final ManagerClient managerClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
     private final BaseMetricReporter baseMetricReporter;
+    private final AuditMetricService auditMetricService;
 
     public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
             ManagerClient managerClient, AlertEvaluator alertEvaluator) {
@@ -56,6 +61,7 @@ public class AuditCheckTask {
         this.managerClient = managerClient;
         this.alertEvaluator = alertEvaluator;
         this.baseMetricReporter =new BaseMetricReporter(prometheusReporter.getRegistry());
+        this.auditMetricService = new AuditMetricService();
     }
 
     /**
@@ -95,7 +101,16 @@ public class AuditCheckTask {
                 // Evaluate each audit data against each policy
                 for (AuditData auditData : auditDataList) {
                     for (AlertPolicy policy : policies) {
-                        if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
+                        // 获取dataProxy指标
+                        List<AuditMetricVo> dataProxyMetrics = auditMetricService.getDataproxyAuditMetrics();
+                        
+                        // 获取hive和iceberg指标
+                        List<AuditMetricVo> hiveMetrics = auditMetricService.getHiveAuditMetrics(auditIds);
+                        List<AuditMetricVo> icebergMetrics = auditMetricService.getIcebergAuditMetrics(auditIds);
+                        
+                        // 分别与hive和iceberg进行比较
+                        if (alertEvaluator.shouldTriggerAlert(dataProxyMetrics, hiveMetrics, auditAlertRule) ||
+                            alertEvaluator.shouldTriggerAlert(dataProxyMetrics, icebergMetrics, auditAlertRule)) {
                             alertEvaluator.triggerAlert(auditData, policy);
                         }
                     }
