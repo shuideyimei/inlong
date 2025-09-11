@@ -17,16 +17,13 @@
 
 package org.apache.inlong.managerClient;
 
-import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.response.Response;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,55 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class ManagerClientTest {
 
     private final ManagerClient managerClient = new ManagerClient(new AppConfig());
-
-    @Test
-    void testFetchAlertPolicies_Success() {
-        // Mock data
-        AuditAlertRule rule1 = new AuditAlertRule();
-        rule1.setId(1);
-        rule1.setInlongGroupId("group1");
-        rule1.setInlongStreamId("stream1");
-        rule1.setAuditId("1,2,3");
-
-        AuditAlertRule rule2 = new AuditAlertRule();
-        rule2.setId(2);
-        rule2.setInlongGroupId("group2");
-        rule2.setInlongStreamId("stream2");
-        rule2.setAuditId("4,5");
-
-        List<AuditAlertRule> mockRules = Arrays.asList(rule1, rule2);
-
-        // Mock response
-        Response<List<AuditAlertRule>> mockResponse = new Response<>();
-        mockResponse.setSuccess(true);
-        mockResponse.setData(mockRules);
-
-        try {
-            // Execute
-            List<AlertPolicy> result = managerClient.fetchAlertPolicies();
-            // Verify
-            assertNotNull(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    void testFetchAlertPolicies_Failure() {
-        // Mock response
-        Response<List<AuditAlertRule>> mockResponse = new Response<>();
-        mockResponse.setSuccess(false);
-        mockResponse.setErrMsg("Failed to fetch alert rules");
-
-        // Execute
-        try {
-            List<AlertPolicy> result = managerClient.fetchAlertPolicies();
-            // Verify
-            assertNotNull(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Test
     void testFetchAlertRules_Success() {
@@ -125,7 +73,7 @@ class ManagerClientTest {
     }
 
     @Test
-    void testFetchAuditData_Success() {
+    void testFetchAuditIds_Success() {
         // Mock alert rules
         AuditAlertRule rule = new AuditAlertRule();
         rule.setInlongGroupId("group1");
@@ -138,7 +86,7 @@ class ManagerClientTest {
 
         try {
             // Execute
-            List<AuditData> result = managerClient.fetchAuditData();
+            List<String> result = managerClient.fetchAuditIds();
 
             // Verify
             assertNotNull(result);
@@ -147,26 +95,9 @@ class ManagerClientTest {
         }
     }
 
-    @Test
-    void testFetchAuditData_NoAlertRules() {
-        // Mock empty alert rules
-        Response<List<AuditAlertRule>> alertRulesResponse = new Response<>();
-        alertRulesResponse.setSuccess(true);
-        alertRulesResponse.setData(Collections.emptyList());
-
-        try {
-            // Execute
-            List<AuditData> result = managerClient.fetchAuditData();
-
-            // Verify
-            assertNotNull(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Test
-    void testFetchAuditData_AuditRequestFailure() {
+    void testFetchAuditIds_Failure() {
         // Mock alert rules
         AuditAlertRule rule = new AuditAlertRule();
         rule.setInlongGroupId("group1");
@@ -179,7 +110,7 @@ class ManagerClientTest {
 
         try {
             // Execute
-            List<AuditData> result = managerClient.fetchAuditData();
+            List<String> result = managerClient.fetchAuditIds();
 
             // Verify
             assertNotNull(result);
