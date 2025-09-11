@@ -56,9 +56,9 @@ public class AlertEvaluator {
                 auditData.getReceivedCount());
     }
 
-    public List<String> getEnabledPlatforms(AlertPolicy alertPolicy) {
+    public List<String> getEnabledPlatforms(AuditAlertRule alertRule) {
         List<String> enabledPlatforms = new ArrayList<>();
-        List<String> targets = alertPolicy.getTargets();
+        List<String> targets = alertRule.getTargets();
         if (targets != null) {
             for (String target : targets) {
                 switch (target.toLowerCase()) {
@@ -92,7 +92,6 @@ public class AlertEvaluator {
                     if (dataProxyMetric.getInlongGroupId().equals(storageMetric.getInlongGroupId()) &&
                         dataProxyMetric.getInlongStreamId().equals(storageMetric.getInlongStreamId())) {
                         long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
-                        // 根据操作符比较差值和阈值
                         switch (condition.getOperator()) {
                             case ">":
                                 return countDifference > threshold;
@@ -116,11 +115,11 @@ public class AlertEvaluator {
         return false;
     }
 
-    public void triggerAlert(AuditData auditData, AlertPolicy policy) {
-        List<String> enabledPlatforms = getEnabledPlatforms(policy);
+    public void triggerAlert(AuditData auditData, AuditAlertRule alertRule) {
+        List<String> enabledPlatforms = getEnabledPlatforms(alertRule);
         MetricData metricData = calculateMetricData(auditData);
         if (metricData.getAlertInfo() == null) {
-            metricData.setAlertInfo(new MetricData.AlertInfo(policy.getAlertType()));
+            metricData.setAlertInfo(new MetricData.AlertInfo(alertRule.getAlertName()));
         }
 
         for (String platform : enabledPlatforms) {
