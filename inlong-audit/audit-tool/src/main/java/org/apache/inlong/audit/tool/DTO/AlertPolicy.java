@@ -20,6 +20,7 @@ package org.apache.inlong.audit.tool.DTO;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -56,7 +57,7 @@ public class AlertPolicy {
     }
 
     public List<String> getTargets() {
-        return null;
+        return Collections.singletonList("promethus");
     }
 
 }
