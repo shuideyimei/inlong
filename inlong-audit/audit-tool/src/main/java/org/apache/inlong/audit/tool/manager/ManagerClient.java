@@ -18,16 +18,10 @@
 package org.apache.inlong.audit.tool.manager;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.DTO.AuditData;
-import org.apache.inlong.audit.tool.DTO.AuditInfo;
-import org.apache.inlong.audit.tool.DTO.AuditRequest;
-import org.apache.inlong.audit.tool.VO.AuditVO;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.response.Response;
-import org.apache.inlong.audit.tool.util.CommonBeanUtils;
 import org.apache.inlong.audit.tool.util.HttpUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
