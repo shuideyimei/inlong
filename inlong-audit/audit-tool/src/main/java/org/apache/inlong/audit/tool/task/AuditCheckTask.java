@@ -99,7 +99,6 @@ public class AuditCheckTask {
                 // 获取dataProxy指标
                 List<AuditMetricVo> dataProxyMetrics = auditMetricService.getDataproxyAuditMetrics();
                 
-                // 获取hive和iceberg指标
 
                 // Evaluate each audit data against each policy
                 for (AuditData auditData : auditDataList) {

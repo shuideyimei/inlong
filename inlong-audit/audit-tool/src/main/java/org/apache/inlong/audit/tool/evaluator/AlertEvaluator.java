@@ -30,6 +30,7 @@ import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AlertEvaluator {
@@ -58,7 +59,8 @@ public class AlertEvaluator {
 
     public List<String> getEnabledPlatforms(AuditAlertRule alertRule) {
         List<String> enabledPlatforms = new ArrayList<>();
-        List<String> targets = alertRule.getTargets();
+        //先写死成promethus
+        List<String> targets = Collections.singletonList("promethus");
         if (targets != null) {
             for (String target : targets) {
                 switch (target.toLowerCase()) {
