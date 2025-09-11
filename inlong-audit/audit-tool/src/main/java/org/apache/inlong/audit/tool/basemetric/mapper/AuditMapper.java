@@ -32,6 +32,6 @@ public interface AuditMapper {
     List<AuditDataVo> queryAuditDataBySeconds(@Param("seconds") Integer seconds);
 
     @Select("select inlong_group_id as inlongGroupId,inlong_stream_id as inlongStreamId, sum(count) count" +
-            " from audit_data where audit_id = #{audit_id} group by inlong_group_id,inlong_stream_id")
+            " from audit_data where audit_id = #{audit_id} and log_ts = #{log_ts} group by inlong_group_id,inlong_stream_id")
     List<AuditMetricVo> queryDataproxyAuditMetric(@Param("log_ts")String logTs,@Param("audit_id")String auditId);
 }
