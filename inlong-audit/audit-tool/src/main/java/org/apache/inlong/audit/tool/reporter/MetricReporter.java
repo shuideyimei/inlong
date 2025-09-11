@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.metric.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
 
 import java.util.Map;
 

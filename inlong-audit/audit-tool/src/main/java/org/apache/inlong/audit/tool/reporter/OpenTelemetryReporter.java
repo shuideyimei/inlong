@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.metric.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -40,11 +40,11 @@ public class OpenTelemetryReporter implements MetricReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenTelemetryReporter.class);
 
     protected SdkMeterProvider meterProvider;
-    protected Meter meter;
-    protected LongCounter alertCounter;
+    public Meter meter;
+    public LongCounter alertCounter;
     // For Gauge, we need a way to hold the latest value for each dimension set.
     // A map is a good way to handle this dynamically.
-    protected final Map<Attributes, Double> dataLossRateValues = new ConcurrentHashMap<>();
+    public final Map<Attributes, Double> dataLossRateValues = new ConcurrentHashMap<>();
 
     @Override
     public void init(Map<String, Object> config) {

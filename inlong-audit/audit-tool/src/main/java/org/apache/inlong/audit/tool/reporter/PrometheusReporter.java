@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.metric.MetricData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
@@ -54,7 +54,7 @@ public class PrometheusReporter implements MetricReporter {
 
     /**
      * Constructor for PrometheusReporter.
-     * Initializes a new CollectorRegistry for metric isolation.
+     * Initializes a new CollectorRegistry for DTO isolation.
      */
     public PrometheusReporter() {
         this.registry = new CollectorRegistry();
@@ -71,8 +71,11 @@ public class PrometheusReporter implements MetricReporter {
         // It's better to get configuration from the passed map than a global singleton.
         int port = (int) config.getOrDefault(KEY_PROMETHEUS_PORT, DEFAULT_PROMETHEUS_PORT);
         try {
-            // Start the Prometheus HTTP server on the configured port.
-            server = new HTTPServer(port);
+            // Start the Prometheus HTTP server on the configured port with our registry.
+            server = new HTTPServer.Builder()
+                    .withPort(port)
+                    .withRegistry(registry)
+                    .build();
             LOGGER.info("Prometheus server started on port {}", port);
 
             // Define and register the 'alerts total' gauge.
@@ -97,9 +100,9 @@ public class PrometheusReporter implements MetricReporter {
     }
 
     /**
-     * Reports the given metric data to Prometheus.
+     * Reports the given DTO data to Prometheus.
      *
-     * @param metricData The metric data to report.
+     * @param metricData The DTO data to report.
      */
     @Override
     public void report(MetricData metricData) {
@@ -149,5 +152,9 @@ public class PrometheusReporter implements MetricReporter {
         if (registry != null) {
             registry.clear();
         }
+    }
+
+    public CollectorRegistry getRegistry(){
+        return this.registry;
     }
 }

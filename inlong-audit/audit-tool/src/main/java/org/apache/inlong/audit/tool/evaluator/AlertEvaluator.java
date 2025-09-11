@@ -1,51 +1,113 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.evaluator;
 
-import org.apache.inlong.audit.protocol.AuditData;
-import org.apache.inlong.audit.tool.config.AlertPolicy;
-import org.apache.inlong.audit.tool.metric.MetricData;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+import org.apache.inlong.audit.tool.DTO.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditData;
+import org.apache.inlong.audit.tool.DTO.MetricData;
+import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlertEvaluator {
+
     private final PrometheusReporter prometheusReporter;
     private final OpenTelemetryReporter openTelemetryReporter;
+    @Getter
+    private final ManagerClient managerClient;
+    @Getter
+    private AuditData auditData;
+    @Getter
+    private AlertPolicy alertpolicy;
 
-    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter) {
+    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+            ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
+        this.managerClient = managerClient;
     }
-    // 获取策略中配置的目标平台
-    public List<String> getEnabledPlatforms(AlertPolicy policy) {
+
+    private MetricData calculateMetricData(AuditData auditData) {
+        return new MetricData(auditData.getGroupId(), auditData.getStreamId(), auditData.getDataLossRate(),
+                auditData.getDataLossCount(), auditData.getAuditCount(), auditData.getExpectedCount(),
+                auditData.getReceivedCount());
+    }
+
+    public List<String> getEnabledPlatforms(AlertPolicy alertPolicy) {
         List<String> enabledPlatforms = new ArrayList<>();
-        List<String> targets = policy.getTargets();
+        List<String> targets = alertPolicy.getTargets();
         if (targets != null) {
             for (String target : targets) {
-                if ("prometheus".equalsIgnoreCase(target)) {
-                    enabledPlatforms.add("prometheus");
-                } else if ("opentelemetry".equalsIgnoreCase(target)) {
-                    enabledPlatforms.add("opentelemetry");
+                switch (target.toLowerCase()) {
+                    case "prometheus":
+                        enabledPlatforms.add("prometheus");
+                        break;
+                    case "opentelemetry":
+                        enabledPlatforms.add("opentelemetry");
+                        break;
+                    default:
+                        System.out.println("Invalid platform");
+                        break;
                 }
             }
         }
-
         return enabledPlatforms;
     }
 
+    public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
+        this.auditData = auditData;
+        this.alertpolicy = alertPolicy;
 
+        double dataLossRate = auditData.getDataLossRate();
 
-    public boolean shouldTriggerAlert(MetricData metricData, AlertPolicy policy) {
-        // TODO：写一个switch选择语句，根据不同的策略把不同的指标加入运算，看是否超过阈值
-        return false;
+        double threshold = alertPolicy.getThreshold();
+        String comparisonOperator = alertPolicy.getComparisonOperator();
+
+        switch (comparisonOperator) {
+            case ">":
+                return dataLossRate > threshold;
+            case ">=":
+                return dataLossRate >= threshold;
+            case "<":
+                return dataLossRate < threshold;
+            case "<=":
+                return dataLossRate <= threshold;
+            case "==":
+                return dataLossRate == threshold;
+            case "!=":
+                return dataLossRate != threshold;
+            default:
+                return false;
+        }
     }
 
-    public void triggerAlert(MetricData metricData, AlertPolicy policy) {
-        // 获取启用的平台
+    public void triggerAlert(AuditData auditData, AlertPolicy policy) {
         List<String> enabledPlatforms = getEnabledPlatforms(policy);
+        MetricData metricData = calculateMetricData(auditData);
+        if (metricData.getAlertInfo() == null) {
+            metricData.setAlertInfo(new MetricData.AlertInfo(policy.getAlertType()));
+        }
 
-        // 根据启用的平台进行上报
         for (String platform : enabledPlatforms) {
             switch (platform.toLowerCase()) {
                 case "prometheus":
@@ -55,14 +117,10 @@ public class AlertEvaluator {
                     openTelemetryReporter.report(metricData);
                     break;
                 default:
-                    // TODO：处理未知平台或记录日志
+                    System.out.println("Invalid platform: " + platform);
                     break;
             }
         }
     }
 
-    public MetricData calculateMetricData(AuditData auditData) {
-        // TODO: 根据manager fetch的auditData去计算metricData
-        return null;
-    }
 }
