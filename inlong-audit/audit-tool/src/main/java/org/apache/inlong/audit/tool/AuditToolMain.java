@@ -20,7 +20,7 @@ package org.apache.inlong.audit.tool;
 import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
+import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 
@@ -30,8 +30,10 @@ public class AuditToolMain {
         // Load application configuration
         AppConfig appConfig = new AppConfig();
 
-        // Initialize manager client
-        ManagerClient managerClient = new ManagerClient(appConfig);
+        // Initialize auditAlertRule Manager
+        AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
+        auditAlertRuleManager.init(appConfig);
+        auditAlertRuleManager.schedule();
 
         // Initialize reporters
         PrometheusReporter prometheusReporter = new PrometheusReporter();
@@ -41,9 +43,9 @@ public class AuditToolMain {
         AuditSQLUtil.initialize(appConfig.getProperties());
 
         // Initialize alert evaluator
-        AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, managerClient);
+        AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
         AuditCheckTask auditCheckTask =
-                new AuditCheckTask(managerClient, alertEvaluator, appConfig);
+                new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
         auditCheckTask.start();
 
         // Keep the application running

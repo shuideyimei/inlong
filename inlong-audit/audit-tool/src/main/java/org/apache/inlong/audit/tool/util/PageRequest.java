@@ -19,10 +19,12 @@ package org.apache.inlong.audit.tool.util;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * Pagination request
  */
+@Data
 @ApiModel(value = "Pagination request")
 public class PageRequest {
 
@@ -40,39 +42,4 @@ public class PageRequest {
     @ApiModelProperty(value = "Order type, only support asc and desc, default is desc")
     private String orderType = "desc";
 
-    public String getOrderField() {
-        return orderField;
-    }
-
-    public PageRequest setOrderField(String orderField) {
-        this.orderField = orderField;
-        return this;
-    }
-
-    public String getOrderType() {
-        return orderType;
-    }
-
-    public PageRequest setOrderType(String orderType) {
-        this.orderType = orderType;
-        return this;
-    }
-
-    public int getPageNum() {
-        return pageNum;
-    }
-
-    public PageRequest setPageNum(int pageNum) {
-        this.pageNum = pageNum;
-        return this;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public PageRequest setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-        return this;
-    }
 }

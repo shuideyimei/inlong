@@ -19,7 +19,7 @@ package org.apache.inlong.managerClient;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.config.AppConfig;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
+import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.response.Response;
 
 import org.junit.jupiter.api.Test;
@@ -29,9 +29,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ManagerClientTest {
+class AuditAlertRuleManagerTest {
 
-    private final ManagerClient managerClient = new ManagerClient(new AppConfig());
+    private final AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
 
     @Test
     void testFetchAlertRules() {
@@ -46,7 +46,8 @@ class ManagerClientTest {
 
         try {
             // Execute
-            List<AuditAlertRule> result = managerClient.fetchAlertRules();
+            auditAlertRuleManager.init(new AppConfig());
+            List<AuditAlertRule> result = auditAlertRuleManager.fetchAlertRules();
 
             // Verify
             assertNotNull(result);
@@ -69,7 +70,8 @@ class ManagerClientTest {
 
         try {
             // Execute
-            List<String> result = managerClient.fetchAuditIds();
+            auditAlertRuleManager.init(new AppConfig());
+            List<String> result = auditAlertRuleManager.fetchAuditIds();
 
             // Verify
             assertNotNull(result);

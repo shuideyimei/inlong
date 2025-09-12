@@ -37,6 +37,5 @@ public class ConfigConstants {
     public static final String DESC_AUDIT_TOOL_ALERTS_TOTAL = "Total number of alerts";
     public static final String AUDIT_TOOL_DATA_LOSS_RATE = "audit_tool_data_loss_rate";
     public static final String DESC_AUDIT_TOOL_DATA_LOSS_RATE = "Data loss rate between Sort and DataProxy";
-    public static final String STORAGE_ICEBERG = "iceberg";
-    public static final String STORAGE_HIVE = "hive";
+    public static final String AUDIT_ALERT_RULE_lIST_PATH = "/api/audit/alert/rule/list";
 }

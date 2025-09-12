@@ -68,4 +68,11 @@ public class AppConfig {
         return properties;
     }
 
+    public String getSecretId() {
+        return properties.getProperty("audit.secretId");
+    }
+
+    public String getSecretKey() {
+        return properties.getProperty("audit.secretKey");
+    }
 }
