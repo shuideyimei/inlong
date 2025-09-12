@@ -23,7 +23,6 @@ import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
-import org.apache.inlong.audit.tool.util.AuditIdEnum;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
