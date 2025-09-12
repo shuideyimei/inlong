@@ -23,8 +23,8 @@ import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
-
 import org.apache.inlong.audit.tool.util.AuditIdEnum;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,18 +44,19 @@ public class AuditCheckTask {
     private final ManagerClient managerClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
     private final AuditMetricService auditMetricService;
-    private  Integer executionIntervalTime;
+    private Integer executionIntervalTime;
 
     public AuditCheckTask(
-                          ManagerClient managerClient, AlertEvaluator alertEvaluator, AppConfig appConfig) {
+            ManagerClient managerClient, AlertEvaluator alertEvaluator, AppConfig appConfig) {
         this.managerClient = managerClient;
         this.alertEvaluator = alertEvaluator;
         this.auditMetricService = new AuditMetricService();
         try {
-            this.executionIntervalTime=Integer.valueOf(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
-        }catch (Exception e){
+            this.executionIntervalTime =
+                    Integer.valueOf(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
+        } catch (Exception e) {
             LOGGER.info("No configuration related to execution interval time was read, default setting is 1");
-            this.executionIntervalTime=1;
+            this.executionIntervalTime = 1;
         }
     }
 
@@ -70,12 +71,12 @@ public class AuditCheckTask {
      * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
-        //Obtain auditIds provided by the interface
+        // Obtain auditIds provided by the interface
         List<String> auditIds = managerClient.fetchAuditIds();
         List<String> icebergAuditIds = new ArrayList<>();
         List<String> hiveAuditIds = new ArrayList<>();
 
-        //Classify auditIds as iceberg and dataproxy auditIds respectively
+        // Classify auditIds as iceberg and dataproxy auditIds respectively
         for (String auditId : auditIds) {
             int auditIdInt = Integer.parseInt(auditId);
 
@@ -90,7 +91,7 @@ public class AuditCheckTask {
             }
         }
 
-        //Search for relevant data in the database using auditId
+        // Search for relevant data in the database using auditId
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
         List<AuditMetricVo> icebergAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
         List<AuditMetricVo> hiveAuditMetrics = auditMetricService.getHiveAuditMetrics(hiveAuditIds);
@@ -99,9 +100,12 @@ public class AuditCheckTask {
         List<AuditAlertRule> alertRules = managerClient.fetchAlertRules();
 
         for (AuditAlertRule alertRule : alertRules) {
-            //When the threshold condition is reached, output the alarm information to the console and report it to Prometheus
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics,icebergAuditMetrics,alertRule,"iceberg");
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics,hiveAuditMetrics,alertRule,"hive");
+            // When the threshold condition is reached, output the alarm information to the console and report it to
+            // Prometheus
+            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, icebergAuditMetrics,
+                    alertRule, "iceberg");
+            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, hiveAuditMetrics, alertRule,
+                    "hive");
         }
     }
 

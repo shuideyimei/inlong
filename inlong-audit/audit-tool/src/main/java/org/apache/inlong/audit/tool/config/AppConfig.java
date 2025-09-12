@@ -56,13 +56,15 @@ public class AppConfig {
     public Map<String, Object> getPrometheusConfig() {
         Map<String, Object> config = new HashMap<>();
         config.put("prometheus.enabled", Boolean.parseBoolean(properties.getProperty("prometheus.enabled", "false")));
-        config.put("prometheus.endpoint", properties.getProperty("prometheus.endpoint", "http://localhost:9090/api/v1/write"));
+        config.put("prometheus.endpoint",
+                properties.getProperty("prometheus.endpoint", "http://localhost:9090/api/v1/write"));
         Integer defaultPrometheusPort = DEFAULT_PROMETHEUS_PORT;
-        config.put(KEY_PROMETHEUS_PORT, Integer.parseInt(properties.getProperty(KEY_PROMETHEUS_PORT, defaultPrometheusPort.toString())));
+        config.put(KEY_PROMETHEUS_PORT,
+                Integer.parseInt(properties.getProperty(KEY_PROMETHEUS_PORT, defaultPrometheusPort.toString())));
         System.out.println("Prometheus port: " + config.get(KEY_PROMETHEUS_PORT));
         return config;
     }
-    public Properties getProperties(){
+    public Properties getProperties() {
         return properties;
     }
 

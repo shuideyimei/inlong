@@ -17,15 +17,12 @@
 
 package org.apache.inlong.audit.tool.util;
 
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.inlong.audit.tool.util.AuditType.*;
 import static org.apache.inlong.audit.tool.util.FlowType.INPUT;
 import static org.apache.inlong.audit.tool.util.FlowType.OUTPUT;
-
 
 /**
  * Audit item management, each module is assigned two baseline audit item IDs, namely receiving and sending.
