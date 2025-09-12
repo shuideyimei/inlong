@@ -22,85 +22,119 @@ import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
-
+import org.apache.inlong.audit.tool.config.ConfigConstants;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class AlertEvaluator {
+
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlertEvaluator.class);
+
 
     private final PrometheusReporter prometheusReporter;
     @Getter
     private final ManagerClient managerClient;
-    public AlertEvaluator(PrometheusReporter prometheusReporter,
-            ManagerClient managerClient) {
+
+    public AlertEvaluator(PrometheusReporter prometheusReporter, ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
         this.managerClient = managerClient;
     }
-    public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
-            List<AuditMetricVo> storageMetrics,
-            AuditAlertRule alertRule,
-            String storageName) {
-        if (dataProxyMetrics == null || storageMetrics == null) {
+
+    public void evaluateAndReport(List<AuditMetricVo> dataproxyAuditMetrics, List<AuditMetricVo> storageAuditMetrics,
+                                  AuditAlertRule alertRule) {
+        if (dataproxyAuditMetrics == null || storageAuditMetrics == null || alertRule == null) {
             return;
         }
 
         AuditAlertCondition condition = alertRule.getCondition();
-        double threshold = condition.getValue();
+        if (condition == null) {
+            LOGGER.warn("Alert condition is null");
+            return;
+        }
+
+        Double thresholdObj = condition.getValue();
         String op = condition.getOperator();
+        if (thresholdObj == null || op == null) {
+            LOGGER.warn("Invalid threshold or operator: threshold={}, operator={}", thresholdObj, op);
+            return;
+        }
 
-        for (AuditMetricVo dp : dataProxyMetrics) {
-            for (AuditMetricVo st : storageMetrics) {
-                if (!dp.getInlongGroupId().equals(st.getInlongGroupId()) ||
-                        !dp.getInlongStreamId().equals(st.getInlongStreamId())) {
-                    continue;
-                }
+        double threshold = thresholdObj;
 
-                long diff = Math.abs(dp.getCount() - st.getCount());
-                boolean hit = false;
+        String storageName = managerClient.fetchStorageType();
+        if (storageName == null) {
+            LOGGER.warn("Storage name is null");
+            return;
+        }
 
-                switch (op) {
-                    case ">":
-                        hit = diff > threshold;
+        // 构建 storageAuditMetrics 的索引 map 提高查找效率
+        Map<String, AuditMetricVo> storageMap = storageAuditMetrics.stream()
+                .filter(Objects::nonNull)
+                .filter(st -> st.getInlongGroupId() != null && st.getInlongStreamId() != null)
+                .collect(Collectors.toMap(
+                        st -> st.getInlongGroupId() + "#" + st.getInlongStreamId(),
+                        st -> st,
+                        (existing, replacement) -> existing
+                ));
+
+        for (AuditMetricVo dp : dataproxyAuditMetrics) {
+            if (dp == null || dp.getInlongGroupId() == null || dp.getInlongStreamId() == null) {
+                continue;
+            }
+
+            String key = dp.getInlongGroupId() + "#" + dp.getInlongStreamId();
+            AuditMetricVo st = storageMap.get(key);
+            if (st == null) {
+                continue;
+            }
+
+            long diff = Math.abs(dp.getCount() - st.getCount());
+            boolean hit = evaluateCondition(diff, op, threshold);
+
+            if (hit) {
+                LOGGER.info("[ALERT] groupId={}, streamId={} | dataproxy={}, {}={} | diff={} {} threshold={}",
+                        dp.getInlongGroupId(), dp.getInlongStreamId(),
+                        dp.getCount(), storageName, st.getCount(), diff, op, threshold);
+
+                switch (storageName) {
+                    case ConfigConstants.STORAGE_ICEBERG:
+                        prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
                         break;
-                    case ">=":
-                        hit = diff >= threshold;
-                        break;
-                    case "<":
-                        hit = diff < threshold;
-                        break;
-                    case "<=":
-                        hit = diff <= threshold;
-                        break;
-                    case "==":
-                        hit = diff == threshold;
-                        break;
-                    case "!=":
-                        hit = diff != threshold;
+                    case ConfigConstants.STORAGE_HIVE:
+                        prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
                         break;
                     default:
-                        hit = false;
-                }
-
-                if (hit) {
-                    System.out.printf(
-                            "[ALERT] groupId=%s, streamId=%s | dataproxy=%d, %s=%d | diff=%d  %s threshold=%.0f%n",
-                            dp.getInlongGroupId(), dp.getInlongStreamId(),
-                            dp.getCount(), storageName, st.getCount(), diff, op, threshold);
-                    switch (storageName) {
-                        case "iceberg":
-                            prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
-                            break;
-                        case "hive":
-                            prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
-                            break;
-                        default:
-                            System.out.println("[ALERT] Unknown storage name: " + storageName);
-                            break;
-                    }
+                        LOGGER.warn("[ALERT] Unknown storage name: {}", storageName);
+                        break;
                 }
             }
         }
     }
 
+    private boolean evaluateCondition(long diff, String op, double threshold) {
+        switch (op) {
+            case ">":
+                return diff > threshold;
+            case ">=":
+                return diff >= threshold;
+            case "<":
+                return diff < threshold;
+            case "<=":
+                return diff <= threshold;
+            case "==":
+                return diff == threshold;
+            case "!=":
+                return diff != threshold;
+            default:
+                LOGGER.warn("Unsupported operator: {}", op);
+                return false;
+        }
+    }
 }

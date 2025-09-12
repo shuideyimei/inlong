@@ -81,10 +81,10 @@ public AuditCheckTask(
      * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
-        String auditId = null;
-        List<AuditMetricVo> dataproxyAuditMetrics = null;
-        List<AuditMetricVo> storageAuditMetrics = null;
-        List<AuditAlertRule> alertRules = null;
+        String auditId;
+        List<AuditMetricVo> dataproxyAuditMetrics;
+        List<AuditMetricVo> storageAuditMetrics;
+        List<AuditAlertRule> alertRules;
 
         try {
             // Obtain auditIds provided by the interface
@@ -114,7 +114,6 @@ public AuditCheckTask(
 
             for (AuditAlertRule alertRule : alertRules) {
                 // When the threshold condition is reached, output the alarm information to the console and report it to
-                // Prometheus
                 alertEvaluator.evaluateAndReport(dataproxyAuditMetrics, storageAuditMetrics, alertRule);
             }
         } catch (Exception e) {

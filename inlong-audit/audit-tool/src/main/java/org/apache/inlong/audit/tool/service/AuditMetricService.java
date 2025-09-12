@@ -157,4 +157,9 @@ public class AuditMetricService {
                 .minusMinutes(intervalTimeMinute)
                 .format(LOGTS_FMT);
     }
+
+    public List<AuditMetricVo> getStorageAuditMetrics(String auditId) {
+        //todo：罗哥，写这个接口，用于获取存储相关的指标
+        return null;
+    }
 }
