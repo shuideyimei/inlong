@@ -53,36 +53,38 @@ public class ManagerClient {
      * @return A list of {@link AuditAlertRule} objects if successful, or null if the request fails.
      */
     public List<AuditAlertRule> fetchAlertRules() {
-        // Get the manager URL from app configuration
-        String managerUrl = appConfig.getManagerUrl();
-        String path = "/audit/alert/rule/list";
         List<AuditAlertRule> auditAlertRuleList = new ArrayList<>();
+        Response<List<AuditAlertRule>> result = null;
 
-        // Ensure there is only one forward slash between the base URL and path
-        String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
+        try {
+            // Get the manager URL from app configuration
+            String managerUrl = appConfig.getManagerUrl();
+            String path = "/audit/alert/rule/list";
 
-        LOGGER.info("begin query audit alertRule list request={}");
+            // Ensure there is only one forward slash between the base URL and path
+            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
 
-        // Send HTTP GET request to the manager API to retrieve audit alert rules
-        Response<List<AuditAlertRule>> result = HttpUtils.request(
-                restTemplate,
-                url,
-                HttpMethod.GET,
-                null,
-                null,
-                new ParameterizedTypeReference<Response<List<AuditAlertRule>>>() {
-                });
+            LOGGER.info("begin query audit alertRule list request={}");
 
-        LOGGER.info("success to query audit info for url ={}", url);
+            // Send HTTP GET request to the manager API to retrieve audit alert rules
+            result = HttpUtils.request(
+                    restTemplate,
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    null,
+                    new ParameterizedTypeReference<Response<List<AuditAlertRule>>>() {
+                    });
 
-        if (result.isSuccess()) {
+            LOGGER.info("success to query audit info for url ={}", url);
+
             // Copy and return the list of audit alert rules
             auditAlertRuleList = result.getData();
             return auditAlertRuleList;
-        } else {
-            LOGGER.error("fetchAlertPolicies fail: {}", result.getErrMsg());
-            return auditAlertRuleList;
+        } catch (Exception e) {
+            LOGGER.error("fetchAlertPolicies fail: ", e);
         }
+        return auditAlertRuleList;
     }
 
     /**
