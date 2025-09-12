@@ -51,12 +51,6 @@ public class AlertEvaluator {
         this.managerClient = managerClient;
     }
 
-    private MetricData calculateMetricData(AuditData auditData) {
-        return new MetricData(auditData.getGroupId(), auditData.getStreamId(), auditData.getDataLossRate(),
-                auditData.getDataLossCount(), auditData.getAuditCount(), auditData.getExpectedCount(),
-                auditData.getReceivedCount());
-    }
-
     public List<String> getEnabledPlatforms(AuditAlertRule alertRule) {
         List<String> enabledPlatforms = new ArrayList<>();
         //先写死成promethus
@@ -117,12 +111,13 @@ public class AlertEvaluator {
         return false;
     }
 
-    public void triggerAlert(AuditData auditData, AuditAlertRule alertRule) {
+
+    public void triggerAlert(AuditMetricVo dataProxyMetric, AuditMetricVo storageMetric, 
+                             AuditAlertRule alertRule) {
         List<String> enabledPlatforms = getEnabledPlatforms(alertRule);
-        MetricData metricData = calculateMetricData(auditData);
-        if (metricData.getAlertInfo() == null) {
-            metricData.setAlertInfo(new MetricData.AlertInfo(alertRule.getAlertName()));
-        }
+        
+        // 根据实际数据构造 MetricData
+        MetricData metricData = getMetricData(dataProxyMetric, storageMetric, alertRule);
 
         for (String platform : enabledPlatforms) {
             switch (platform.toLowerCase()) {
@@ -137,6 +132,24 @@ public class AlertEvaluator {
                     break;
             }
         }
+    }
+
+    private static MetricData getMetricData(AuditMetricVo dataProxyMetric, AuditMetricVo storageMetric, AuditAlertRule alertRule) {
+        long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
+        MetricData metricData = new MetricData(
+            dataProxyMetric.getInlongGroupId(),
+            dataProxyMetric.getInlongStreamId(),
+            0.0, // dataLossRate
+            countDifference, // dataLossCount
+            Math.min(dataProxyMetric.getCount(), storageMetric.getCount()), // auditCount
+            dataProxyMetric.getCount(), // expectedCount
+            storageMetric.getCount() // receivedCount
+        );
+
+        if (metricData.getAlertInfo() == null) {
+            metricData.setAlertInfo(new MetricData.AlertInfo(alertRule.getAlertName()));
+        }
+        return metricData;
     }
 
 }

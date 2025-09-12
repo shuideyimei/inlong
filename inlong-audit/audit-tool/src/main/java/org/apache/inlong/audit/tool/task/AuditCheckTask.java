@@ -90,29 +90,23 @@ public class AuditCheckTask {
             try {
                 LOGGER.info("Attempt #{} to check audit data", attempt);
 
-                // Get audit data
-                List<AuditData> auditDataList = managerClient.fetchAuditData();
-
-                // Get alert policies
                 List<AuditAlertRule> alertRules = managerClient.fetchAlertRules();
-
+                List<String> auditIds = managerClient.fetchAuditIds();
                 // 获取dataProxy指标
                 List<AuditMetricVo> dataProxyMetrics = auditMetricService.getDataproxyAuditMetrics();
-                
+
 
                 // Evaluate each audit data against each policy
-                for (AuditData auditData : auditDataList) {
                     for (AuditAlertRule alertRule : alertRules) {
-                        List<String> auditIds = List.of(alertRule.getAuditId());
                         List<AuditMetricVo> hiveMetrics = auditMetricService.getHiveAuditMetrics(auditIds);
                         List<AuditMetricVo> icebergMetrics = auditMetricService.getIcebergAuditMetrics(auditIds);
                         
                         if (alertEvaluator.shouldTriggerAlert(dataProxyMetrics, hiveMetrics, alertRule) ||
                             alertEvaluator.shouldTriggerAlert(dataProxyMetrics, icebergMetrics, alertRule)) {
-                            alertEvaluator.triggerAlert(auditData, alertRule);
+                            alertEvaluator.triggerAlert(dataProxyMetrics, , alertRule);
+                            LOGGER.info("Alert triggered for rule: {} on audit ID: {}", alertRule.getAlertName(), alertRule.getAuditId());
                         }
                     }
-                }
 
                 // Successfully completed, exit loop
                 success = true;
