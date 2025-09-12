@@ -17,6 +17,7 @@
 
 package org.apache.inlong.manager.web.controller;
 
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.dao.entity.AuditAlertRuleEntity;
 import org.apache.inlong.manager.dao.mapper.AuditAlertRuleEntityMapper;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
@@ -56,13 +57,12 @@ class AuditControllerTest extends WebBaseTest {
         condition.setValue(5);
         rule.setCondition(condition);
         rule.setLevel("WARN");
-        rule.setNotifyType("EMAIL");
+        rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@example.com,operator@example.com");
         rule.setEnabled(true);
         rule.setIsDeleted(0); // Set isDeleted to 0 by default
         rule.setCreator("test_user");
         rule.setModifier("test_user");
-        rule.setVersion(1); // Set default version to 1
         return rule;
     }
 
@@ -75,15 +75,15 @@ class AuditControllerTest extends WebBaseTest {
         entity.setCondition("{\"type\": \"delay\", \"operator\": \">\", \"value\": 1000}"); // Keep as JSON string for
                                                                                             // entity
         entity.setLevel("ERROR");
-        entity.setNotifyType("SMS");
+        entity.setNotifyType(NotifyType.SMS.name());
         entity.setReceivers("admin@example.com");
         entity.setEnabled(true);
-        entity.setIsDeleted(0); // Set isDeleted to 0
         entity.setCreator("test_user");
         entity.setModifier("test_user");
+        entity.setIsDeleted(0);
         entity.setCreateTime(new Date());
         entity.setModifyTime(new Date());
-        entity.setVersion(1); // Set default version to 1
+        entity.setVersion(1);
 
         auditAlertRuleMapper.insert(entity);
         return entity;
@@ -103,12 +103,12 @@ class AuditControllerTest extends WebBaseTest {
         condition.setValue(5);
         request.setCondition(condition);
         request.setLevel("WARN");
-        request.setNotifyType("EMAIL");
+        request.setNotifyType(NotifyType.EMAIL);
         request.setReceivers("admin@example.com,operator@example.com");
         request.setEnabled(true);
 
         // Execute create request
-        MvcResult mvcResult = postForSuccessMvcResult("/api/audit/alert/rule/save", request);
+        MvcResult mvcResult = postForSuccessMvcResult("/api/audit/alert/rule", request);
 
         // Verify response
         Integer createdRuleId = getResBodyObj(mvcResult, Integer.class);
@@ -151,19 +151,21 @@ class AuditControllerTest extends WebBaseTest {
         entity2.setAlertName("Disabled Rule");
         entity2.setCondition("{\"type\": \"count\", \"operator\": \"<\", \"value\": 100}");
         entity2.setLevel("INFO");
-        entity2.setNotifyType("EMAIL");
+        entity2.setNotifyType(NotifyType.EMAIL.name());
         entity2.setReceivers("test@example.com");
         entity2.setEnabled(false); // Disabled
-        entity2.setIsDeleted(0); // Set isDeleted to 0
         entity2.setCreator("test_user");
         entity2.setModifier("test_user");
+        entity2.setIsDeleted(0);
         entity2.setCreateTime(new Date());
         entity2.setModifyTime(new Date());
-        entity2.setVersion(1); // Set default version to 1
         auditAlertRuleMapper.insert(entity2);
+        entity2.setVersion(1);
 
-        // Execute list enabled rules request
-        MvcResult mvcResult = getForSuccessMvcResult("/api/audit/alert/rule/listEnabled");
+        // Execute selectByCondition request for enabled rules
+        AuditAlertRuleRequest request = new AuditAlertRuleRequest();
+        request.setEnabled(true);
+        MvcResult mvcResult = postForSuccessMvcResult("/api/audit/alert/rule/list", request);
 
         // Verify response - handle possible null return
         List<AuditAlertRule> rules = null;
@@ -318,7 +320,7 @@ class AuditControllerTest extends WebBaseTest {
         }
         updateRequest.setCondition(condition);
         updateRequest.setLevel("CRITICAL");
-        updateRequest.setNotifyType("EMAIL");
+        updateRequest.setNotifyType(NotifyType.EMAIL);
         updateRequest.setReceivers("updated@example.com");
         updateRequest.setEnabled(false);
         updateRequest.setVersion(freshEntity.getVersion());
@@ -401,7 +403,7 @@ class AuditControllerTest extends WebBaseTest {
 
         // Execute create request and expect validation error
         MvcResult mvcResult = mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/audit/alert/rule/save")
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/audit/alert/rule")
                         .content(org.apache.inlong.manager.common.util.JsonUtils.toJsonString(invalidRule))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .accept(org.springframework.http.MediaType.APPLICATION_JSON))

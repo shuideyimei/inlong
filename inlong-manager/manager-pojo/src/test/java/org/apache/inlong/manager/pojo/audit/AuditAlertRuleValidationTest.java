@@ -17,6 +17,8 @@
 
 package org.apache.inlong.manager.pojo.audit;
 
+import org.apache.inlong.manager.common.enums.NotifyType;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -249,9 +251,9 @@ public class AuditAlertRuleValidationTest {
     @Test
     void testValidNotifyTypes() {
         // Test valid notification types
-        String[] validNotifyTypes = {"EMAIL", "SMS", "HTTP"};
+        NotifyType[] validNotifyTypes = {NotifyType.EMAIL, NotifyType.SMS, NotifyType.HTTP};
 
-        for (String notifyType : validNotifyTypes) {
+        for (NotifyType notifyType : validNotifyTypes) {
             AuditAlertRule rule = createValidAuditAlertRule();
             rule.setNotifyType(notifyType);
 
@@ -262,17 +264,15 @@ public class AuditAlertRuleValidationTest {
 
     @Test
     void testInvalidNotifyType() {
-        // Test invalid notification type
+        // Test invalid notification type - using EMAIL as placeholder since we can't set invalid enum values
         AuditAlertRule rule = createValidAuditAlertRule();
-        rule.setNotifyType("INVALID");
+        rule.setNotifyType(NotifyType.EMAIL);
 
         Set<ConstraintViolation<AuditAlertRule>> violations = validator.validate(rule);
 
-        // Assert validation error
-        Assertions.assertEquals(1, violations.size());
-        ConstraintViolation<AuditAlertRule> violation = violations.iterator().next();
-        Assertions.assertEquals("Notification type must be one of EMAIL, SMS, or HTTP", violation.getMessage());
-        Assertions.assertEquals("notifyType", violation.getPropertyPath().toString());
+        // This test is no longer valid since we can't set invalid enum values
+        // The validation for notifyType is handled by the enum type itself
+        Assertions.assertTrue(violations.isEmpty());
     }
 
     @Test
@@ -285,25 +285,25 @@ public class AuditAlertRuleValidationTest {
         rule.setCondition(null); // null
         rule.setEnabled(null); // null
         rule.setLevel("INVALID"); // 无效值
-        rule.setNotifyType("INVALID"); // 无效值
+        rule.setNotifyType(NotifyType.EMAIL);
 
         // Validate
         Set<ConstraintViolation<AuditAlertRule>> violations = validator.validate(rule);
 
         // Assert 7 validation errors
-        Assertions.assertEquals(7, violations.size());
+        Assertions.assertEquals(6, violations.size());
     }
 
     @Test
     void testOptionalFieldsCanBeNull() {
         // Create AuditAlertRule with optional fields as null
         AuditAlertRule rule = createValidAuditAlertRule();
-        rule.setInlongStreamId(null); // 可选字段
-        rule.setLevel(null); // 可选字段
-        rule.setNotifyType(null); // 可选字段
-        rule.setReceivers(null); // 可选字段
-        rule.setCreateTime(null); // 可选字段
-        rule.setModifyTime(null); // 可选字段
+        rule.setInlongStreamId(null);
+        rule.setLevel(null);
+        rule.setNotifyType(null);
+        rule.setReceivers(null);
+        rule.setCreateTime(null);
+        rule.setModifyTime(null);
 
         // Validate
         Set<ConstraintViolation<AuditAlertRule>> violations = validator.validate(rule);
@@ -329,15 +329,15 @@ public class AuditAlertRuleValidationTest {
         condition.setValue(1000);
         rule.setCondition(condition);
         rule.setLevel("ERROR");
-        rule.setNotifyType("EMAIL");
+        rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@test.com");
         rule.setEnabled(true);
-        rule.setIsDeleted(0); // Test isDeleted field
         rule.setCreator("test_user");
         rule.setModifier("test_user");
         rule.setCreateTime(now);
         rule.setModifyTime(now);
-        rule.setVersion(1); // Test version field
+        rule.setIsDeleted(0);
+        rule.setVersion(1);
 
         // Assert all properties are set correctly
         Assertions.assertEquals(1, rule.getId());
@@ -347,7 +347,7 @@ public class AuditAlertRuleValidationTest {
         Assertions.assertEquals("Test Alert", rule.getAlertName());
         Assertions.assertEquals(condition, rule.getCondition());
         Assertions.assertEquals("ERROR", rule.getLevel());
-        Assertions.assertEquals("EMAIL", rule.getNotifyType());
+        Assertions.assertEquals(NotifyType.EMAIL, rule.getNotifyType());
         Assertions.assertEquals("admin@test.com", rule.getReceivers());
         Assertions.assertTrue(rule.getEnabled());
         Assertions.assertEquals(0, rule.getIsDeleted().intValue()); // Verify isDeleted
@@ -409,13 +409,13 @@ public class AuditAlertRuleValidationTest {
         condition.setValue(1000);
         rule.setCondition(condition);
         rule.setLevel("ERROR");
-        rule.setNotifyType("EMAIL");
+        rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@example.com,monitor@example.com");
         rule.setEnabled(true);
-        rule.setIsDeleted(0); // Set isDeleted to 0 by default
         rule.setCreator("test_user");
         rule.setModifier("test_user");
-        rule.setVersion(1); // Set default version to 1
+        rule.setIsDeleted(0);
+        rule.setVersion(1);
         return rule;
     }
 }

@@ -23,10 +23,13 @@ import org.apache.inlong.manager.client.api.inner.client.AuditClient;
 import org.apache.inlong.manager.client.api.inner.client.ClientFactory;
 import org.apache.inlong.manager.client.api.util.ClientUtils;
 import org.apache.inlong.manager.common.auth.DefaultAuthentication;
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.common.util.JsonUtils;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -78,7 +81,7 @@ public class AuditAlertRuleIntegrationTest {
     private static final String TEST_ALERT_NAME = "Integration Test Alert";
     private static final AuditAlertCondition TEST_CONDITION = createTestCondition();
     private static final String TEST_LEVEL = "ERROR";
-    private static final String TEST_NOTIFY_TYPE = "EMAIL";
+    private static final NotifyType TEST_NOTIFY_TYPE = NotifyType.EMAIL;
     private static final String TEST_RECEIVERS = "integration@test.com";
 
     private static Integer createdRuleId;
@@ -126,7 +129,7 @@ public class AuditAlertRuleIntegrationTest {
                         .withRequestBody(equalToJson(requestBody))
                         .willReturn(okJson(responseBody)));
 
-        // Execute test - Fix: use auditClient.create() instead of auditClient.createAlertRule()
+        // Execute test
         Integer result = auditClient.create(inputRule);
 
         // Verify result
@@ -141,14 +144,12 @@ public class AuditAlertRuleIntegrationTest {
         // Prepare test data
         AuditAlertRule expectedRule = createTestAlertRule();
         expectedRule.setId(createdRuleId);
-        expectedRule.setVersion(1); // Set version to 1
-        expectedRule.setIsDeleted(0); // Set isDeleted to 0
 
         String responseBody = JsonUtils.toJsonString(Response.success(expectedRule));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/" + createdRuleId + ".*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/" + createdRuleId + ".*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
@@ -170,35 +171,36 @@ public class AuditAlertRuleIntegrationTest {
         AuditAlertRule rule1 = createTestAlertRule();
         rule1.setId(1);
         rule1.setEnabled(true);
-        rule1.setVersion(1); // Set version to 1
-        rule1.setIsDeleted(0); // Set isDeleted to 0
 
         AuditAlertRule rule2 = createTestAlertRule();
         rule2.setId(2);
         rule2.setAlertName("Second Alert Rule");
         rule2.setEnabled(true);
-        rule2.setVersion(1); // Set version to 1
-        rule2.setIsDeleted(0); // Set isDeleted to 0
 
         List<AuditAlertRule> expectedRules = Arrays.asList(rule1, rule2);
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/enabled.*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
-        List<AuditAlertRule> result = auditClient.listEnabled();
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setEnabled(true);
+        PageResult<AuditAlertRule> result = auditClient.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result, "Enabled alert rules list should not be null");
-        Assertions.assertEquals(2, result.size(), "Should return 2 enabled rules");
-        Assertions.assertTrue(result.get(0).getEnabled(), "First rule should be enabled");
-        Assertions.assertTrue(result.get(1).getEnabled(), "Second rule should be enabled");
+        Assertions.assertEquals(2, result.getList().size(), "Should return 2 enabled rules");
+        Assertions.assertTrue(result.getList().get(0).getEnabled(), "First rule should be enabled");
+        Assertions.assertTrue(result.getList().get(1).getEnabled(), "Second rule should be enabled");
         // Verify isDeleted for both rules
-        Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "First rule should not be deleted");
-        Assertions.assertEquals(0, result.get(1).getIsDeleted().intValue(), "Second rule should not be deleted");
+        Assertions.assertEquals(0, result.getList().get(0).getIsDeleted().intValue(),
+                "First rule should not be deleted");
+        Assertions.assertEquals(0, result.getList().get(1).getIsDeleted().intValue(),
+                "Second rule should not be deleted");
 
     }
 
@@ -208,25 +210,26 @@ public class AuditAlertRuleIntegrationTest {
         // Prepare test data
         AuditAlertRule rule = createTestAlertRule();
         rule.setId(createdRuleId);
-        rule.setVersion(1); // Set version to 1
-        rule.setIsDeleted(0); // Set isDeleted to 0
         List<AuditAlertRule> expectedRules = Arrays.asList(rule);
 
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/list\\?inlongGroupId=" + TEST_GROUP_ID + ".*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(okJson(responseBody)));
 
-        // Execute test
-        List<AuditAlertRule> result = auditClient.listRules(TEST_GROUP_ID, null);
+        // Execute test - 使用listByCondition替代selectByCondition
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setInlongGroupId(TEST_GROUP_ID);
+        PageResult<AuditAlertRule> result = auditClient.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result, "Alert rules list by group should not be null");
-        Assertions.assertEquals(1, result.size(), "Should return 1 rule");
-        Assertions.assertEquals(TEST_GROUP_ID, result.get(0).getInlongGroupId(), "Group ID should match");
-        Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "Rule should not be deleted");
+        Assertions.assertEquals(1, result.getList().size(), "Should return 1 rule");
+        Assertions.assertEquals(TEST_GROUP_ID, result.getList().get(0).getInlongGroupId(), "Group ID should match");
+        Assertions.assertEquals(0, result.getList().get(0).getIsDeleted().intValue(), "Rule should not be deleted");
 
     }
 
@@ -236,28 +239,28 @@ public class AuditAlertRuleIntegrationTest {
         // Prepare test data
         AuditAlertRule rule = createTestAlertRule();
         rule.setId(createdRuleId);
-        rule.setVersion(1); // Set version to 1
-        rule.setIsDeleted(0); // Set isDeleted to 0
         List<AuditAlertRule> expectedRules = Arrays.asList(rule);
 
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/list\\?inlongGroupId=" + TEST_GROUP_ID
-                        + "&inlongStreamId="
-                        + TEST_STREAM_ID + ".*"))
-                                .willReturn(okJson(responseBody)));
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
+                        .willReturn(okJson(responseBody)));
 
         // Execute test
-        List<AuditAlertRule> result = auditClient.listRules(TEST_GROUP_ID, TEST_STREAM_ID);
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setInlongGroupId(TEST_GROUP_ID);
+        request.setInlongStreamId(TEST_STREAM_ID);
+        PageResult<AuditAlertRule> result = auditClient.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result, "Alert rules list by group and stream should not be null");
-        Assertions.assertEquals(1, result.size(), "Should return 1 rule");
-        Assertions.assertEquals(TEST_GROUP_ID, result.get(0).getInlongGroupId(), "Group ID should match");
-        Assertions.assertEquals(TEST_STREAM_ID, result.get(0).getInlongStreamId(), "Stream ID should match");
-        Assertions.assertEquals(0, result.get(0).getIsDeleted().intValue(), "Rule should not be deleted");
+        Assertions.assertEquals(1, result.getList().size(), "Should return 1 rule");
+        Assertions.assertEquals(TEST_GROUP_ID, result.getList().get(0).getInlongGroupId(), "Group ID should match");
+        Assertions.assertEquals(TEST_STREAM_ID, result.getList().get(0).getInlongStreamId(), "Stream ID should match");
+        Assertions.assertEquals(0, result.getList().get(0).getIsDeleted().intValue(), "Rule should not be deleted");
 
     }
 
@@ -276,14 +279,13 @@ public class AuditAlertRuleIntegrationTest {
         inputRule.setLevel("CRITICAL");
         inputRule.setAlertName("Updated Integration Test Alert");
         inputRule.setVersion(2); // Set version for update
-        inputRule.setIsDeleted(0); // Set isDeleted to 0
 
         String requestBody = JsonUtils.toJsonString(inputRule);
         String responseBody = JsonUtils.toJsonString(Response.success(inputRule));
 
         // Mock API response
         stubFor(
-                put(urlMatching("/inlong/manager/api/audit/alert/rule.*"))
+                put(urlMatching("/inlong/manager/api/audit/alert/rule/update.*"))
                         .withRequestBody(equalToJson(requestBody))
                         .willReturn(okJson(responseBody)));
 
@@ -335,8 +337,6 @@ public class AuditAlertRuleIntegrationTest {
         AuditAlertRule createdRule = createTestAlertRule();
         createdRule.setId(100);
         createdRule.setAlertName("Workflow Test Alert");
-        createdRule.setVersion(1); // Set version to 1
-        createdRule.setIsDeleted(0); // Set isDeleted to 0
 
         stubFor(
                 post(urlMatching("/inlong/manager/api/audit/alert/rule.*"))
@@ -348,7 +348,7 @@ public class AuditAlertRuleIntegrationTest {
 
         // 2. Query rule
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/100.*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/100.*"))
                         .willReturn(okJson(JsonUtils.toJsonString(Response.success(createdRule)))));
 
         AuditAlertRule queriedRule = auditClient.get(100);
@@ -362,10 +362,9 @@ public class AuditAlertRuleIntegrationTest {
         updateRule.setAlertName("Updated Workflow Test Alert");
         updateRule.setLevel("CRITICAL");
         updateRule.setVersion(2); // Set version for update
-        updateRule.setIsDeleted(0); // Set isDeleted to 0
 
         stubFor(
-                put(urlMatching("/inlong/manager/api/audit/alert/rule.*"))
+                put(urlMatching("/inlong/manager/api/audit/alert/rule/update.*"))
                         .willReturn(okJson(JsonUtils.toJsonString(Response.success(updateRule)))));
 
         AuditAlertRule updatedRule = auditClient.update(updateRule);
@@ -391,7 +390,7 @@ public class AuditAlertRuleIntegrationTest {
 
         // 1. Test querying non-existent rule
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/999.*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/999.*"))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(404)
                                 .withHeader("Content-Type", "application/json")
@@ -422,11 +421,9 @@ public class AuditAlertRuleIntegrationTest {
             AuditAlertRule rule = createTestAlertRule();
             rule.setId(200 + i);
             rule.setAlertName("Concurrent Test Alert " + i);
-            rule.setVersion(1); // Set version to 1
-            rule.setIsDeleted(0); // Set isDeleted to 0
 
             stubFor(
-                    get(urlMatching("/inlong/manager/api/audit/alert/rule/" + (200 + i) + ".*"))
+                    get(urlMatching("/inlong/manager/api/audit/alert/rule/get/" + (200 + i) + ".*"))
                             .willReturn(okJson(JsonUtils.toJsonString(Response.success(rule)))));
         }
 
@@ -477,8 +474,6 @@ public class AuditAlertRuleIntegrationTest {
         rule.setNotifyType(TEST_NOTIFY_TYPE);
         rule.setReceivers(TEST_RECEIVERS);
         rule.setEnabled(true);
-        rule.setIsDeleted(0); // Set default isDeleted to 0
-        rule.setVersion(1); // Set default version to 1
         return rule;
     }
 

@@ -22,10 +22,13 @@ import org.apache.inlong.manager.client.api.impl.InlongClientImpl;
 import org.apache.inlong.manager.client.api.inner.client.ClientFactory;
 import org.apache.inlong.manager.client.api.util.ClientUtils;
 import org.apache.inlong.manager.common.auth.DefaultAuthentication;
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.common.util.JsonUtils;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -111,14 +114,12 @@ public class AuditApiAlertRuleTest {
         // Prepare test data
         AuditAlertRule expectedRule = createTestAlertRule();
         expectedRule.setId(1);
-        expectedRule.setVersion(1); // Set version to 1
-        expectedRule.setIsDeleted(0); // Set isDeleted to 0
 
         String responseBody = JsonUtils.toJsonString(Response.success(expectedRule));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/1.*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/1.*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
@@ -140,38 +141,37 @@ public class AuditApiAlertRuleTest {
         AuditAlertRule rule1 = createTestAlertRule();
         rule1.setId(1);
         rule1.setEnabled(true);
-        rule1.setVersion(1); // Set version to 1
-        rule1.setIsDeleted(0); // Set isDeleted to 0
 
         AuditAlertRule rule2 = createTestAlertRule();
         rule2.setId(2);
         rule2.setAlertName("High Delay Alert");
         rule2.setEnabled(true);
-        rule2.setVersion(1); // Set version to 1
-        rule2.setIsDeleted(0); // Set isDeleted to 0
 
         List<AuditAlertRule> expectedRules = Arrays.asList(rule1, rule2);
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/enabled.*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
-        Call<Response<List<AuditAlertRule>>> call = auditApi.listEnabled();
-        Response<List<AuditAlertRule>> response = call.execute().body();
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setEnabled(true);
+        Call<Response<PageResult<AuditAlertRule>>> call = auditApi.listByCondition(request);
+        Response<PageResult<AuditAlertRule>> response = call.execute().body();
 
         // Verify result
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.isSuccess());
         Assertions.assertNotNull(response.getData());
-        Assertions.assertEquals(2, response.getData().size());
-        Assertions.assertTrue(response.getData().get(0).getEnabled());
-        Assertions.assertTrue(response.getData().get(1).getEnabled());
+        Assertions.assertEquals(2, response.getData().getList().size());
+        Assertions.assertTrue(response.getData().getList().get(0).getEnabled());
+        Assertions.assertTrue(response.getData().getList().get(1).getEnabled());
         // Verify isDeleted for both rules
-        Assertions.assertEquals(0, response.getData().get(0).getIsDeleted().intValue());
-        Assertions.assertEquals(0, response.getData().get(1).getIsDeleted().intValue());
+        Assertions.assertEquals(0, response.getData().getList().get(0).getIsDeleted().intValue());
+        Assertions.assertEquals(0, response.getData().getList().get(1).getIsDeleted().intValue());
     }
 
     @Test
@@ -179,30 +179,31 @@ public class AuditApiAlertRuleTest {
         // Prepare test data
         AuditAlertRule rule = createTestAlertRule();
         rule.setId(1);
-        rule.setVersion(1); // Set version to 1
-        rule.setIsDeleted(0); // Set isDeleted to 0
         List<AuditAlertRule> expectedRules = Arrays.asList(rule);
 
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response
         stubFor(
-                get(urlMatching(
-                        "/inlong/manager/api/audit/alert/rule/list\\?inlongGroupId=test_group_001&inlongStreamId=test_stream_001.*"))
-                                .willReturn(okJson(responseBody)));
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
+                        .willReturn(okJson(responseBody)));
 
         // Execute test
-        Call<Response<List<AuditAlertRule>>> call = auditApi.listRules("test_group_001", "test_stream_001");
-        Response<List<AuditAlertRule>> response = call.execute().body();
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setInlongGroupId("test_group_001");
+        request.setInlongStreamId("test_stream_001");
+        Call<Response<PageResult<AuditAlertRule>>> call = auditApi.listByCondition(request);
+        Response<PageResult<AuditAlertRule>> response = call.execute().body();
 
         // Verify result
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.isSuccess());
         Assertions.assertNotNull(response.getData());
-        Assertions.assertEquals(1, response.getData().size());
-        Assertions.assertEquals("test_group_001", response.getData().get(0).getInlongGroupId());
-        Assertions.assertEquals("test_stream_001", response.getData().get(0).getInlongStreamId());
-        Assertions.assertEquals(0, response.getData().get(0).getIsDeleted().intValue()); // Verify isDeleted
+        Assertions.assertEquals(1, response.getData().getList().size());
+        Assertions.assertEquals("test_group_001", response.getData().getList().get(0).getInlongGroupId());
+        Assertions.assertEquals("test_stream_001", response.getData().getList().get(0).getInlongStreamId());
+        Assertions.assertEquals(0, response.getData().getList().get(0).getIsDeleted().intValue()); // Verify isDeleted
     }
 
     @Test
@@ -210,27 +211,28 @@ public class AuditApiAlertRuleTest {
         // Prepare test data
         AuditAlertRule rule = createTestAlertRule();
         rule.setId(1);
-        rule.setVersion(1); // Set version to 1
-        rule.setIsDeleted(0); // Set isDeleted to 0
         List<AuditAlertRule> expectedRules = Arrays.asList(rule);
 
-        String responseBody = JsonUtils.toJsonString(Response.success(expectedRules));
+        PageResult<AuditAlertRule> pageResult = new PageResult<>(expectedRules, (long) expectedRules.size());
+        String responseBody = JsonUtils.toJsonString(Response.success(pageResult));
 
         // Mock API response - test null parameters case
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(okJson(responseBody)));
 
         // Execute test
-        Call<Response<List<AuditAlertRule>>> call = auditApi.listRules(null, null);
-        Response<List<AuditAlertRule>> response = call.execute().body();
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        // 不设置参数，相当于查询所有
+        Call<Response<PageResult<AuditAlertRule>>> call = auditApi.listByCondition(request);
+        Response<PageResult<AuditAlertRule>> response = call.execute().body();
 
         // Verify result
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.isSuccess());
         Assertions.assertNotNull(response.getData());
-        Assertions.assertEquals(1, response.getData().size());
-        Assertions.assertEquals(0, response.getData().get(0).getIsDeleted().intValue()); // Verify isDeleted
+        Assertions.assertEquals(1, response.getData().getList().size());
+        Assertions.assertEquals(0, response.getData().getList().get(0).getIsDeleted().intValue()); // Verify isDeleted
     }
 
     @Test
@@ -245,14 +247,13 @@ public class AuditApiAlertRuleTest {
         inputRule.setCondition(condition);
         inputRule.setLevel("CRITICAL");
         inputRule.setVersion(2); // Set version for update
-        inputRule.setIsDeleted(0); // Set isDeleted to 0
 
         String requestBody = JsonUtils.toJsonString(inputRule);
         String responseBody = JsonUtils.toJsonString(Response.success(inputRule));
 
         // Mock API response
         stubFor(
-                put(urlMatching("/inlong/manager/api/audit/alert/rule.*"))
+                put(urlMatching("/inlong/manager/api/audit/alert/rule/update.*"))
                         .withRequestBody(equalToJson(requestBody))
                         .willReturn(okJson(responseBody)));
 
@@ -316,7 +317,7 @@ public class AuditApiAlertRuleTest {
     void testApiErrorHandling() throws IOException {
         // Mock API error response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/1.*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/1.*"))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(500)
                                 .withHeader("Content-Type", "application/json")
@@ -349,11 +350,9 @@ public class AuditApiAlertRuleTest {
         condition.setValue(1000);
         rule.setCondition(condition);
         rule.setLevel("ERROR");
-        rule.setNotifyType("EMAIL");
+        rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@example.com,monitor@example.com");
         rule.setEnabled(true);
-        rule.setIsDeleted(0); // Set default isDeleted to 0
-        rule.setVersion(1); // Set default version to 1
         return rule;
     }
 
@@ -372,7 +371,7 @@ public class AuditApiAlertRuleTest {
         condition.setValue(1000);
         request.setCondition(condition);
         request.setLevel("ERROR");
-        request.setNotifyType("EMAIL");
+        request.setNotifyType(NotifyType.EMAIL);
         request.setReceivers("admin@example.com,monitor@example.com");
         request.setEnabled(true);
         return request;
