@@ -17,10 +17,11 @@
 
 package org.apache.inlong.audit.tool.service;
 
-import org.apache.ibatis.session.SqlSession;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.basemetric.mapper.AuditMapper;
 import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
+
+import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class AuditMetricService {
+
     private Integer intervalTimeMinute;
 
     private static final String DATAPROXY_AUDIT_ID = "5";

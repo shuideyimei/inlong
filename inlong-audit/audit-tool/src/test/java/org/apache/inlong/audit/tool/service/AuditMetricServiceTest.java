@@ -20,57 +20,61 @@ package org.apache.inlong.audit.tool.service;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AuditMetricServiceTest {
+
     @Test
-    public void testGetDataproxyAuditMetrics(){
-        //Query service initialization
+    public void testGetDataproxyAuditMetrics() {
+        // Query service initialization
         AppConfig appConfig = new AppConfig();
         AuditSQLUtil.initialize(appConfig.getProperties());
-        AuditMetricService auditMetricService=new AuditMetricService();
-        //Search for relevant data
+        AuditMetricService auditMetricService = new AuditMetricService();
+        // Search for relevant data
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
 
-        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
-            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
+        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
+            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
+                    + auditMetricVo.getCount());
         }
     }
 
     @Test
-    public void testGetIcebergAuditMetrics(){
-        //Query service initialization
+    public void testGetIcebergAuditMetrics() {
+        // Query service initialization
         AppConfig appConfig = new AppConfig();
         AuditSQLUtil.initialize(appConfig.getProperties());
-        AuditMetricService auditMetricService=new AuditMetricService();
+        AuditMetricService auditMetricService = new AuditMetricService();
 
-        //Search for relevant data
-        List<String> icebergAuditIds=new ArrayList<>();
+        // Search for relevant data
+        List<String> icebergAuditIds = new ArrayList<>();
         icebergAuditIds.add("1073741838");
 
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
-        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
-            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
+        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
+            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
+                    + auditMetricVo.getCount());
         }
     }
 
     @Test
-    public void testGetHiveAuditMetrics(){
+    public void testGetHiveAuditMetrics() {
 
         AppConfig appConfig = new AppConfig();
         AuditSQLUtil.initialize(appConfig.getProperties());
-        AuditMetricService auditMetricService=new AuditMetricService();
+        AuditMetricService auditMetricService = new AuditMetricService();
 
-
-        List<String> icebergAuditIds=new ArrayList<>();
+        List<String> icebergAuditIds = new ArrayList<>();
         icebergAuditIds.add("1073741838");
 
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getHiveAuditMetrics(icebergAuditIds);
-        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
-            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
+        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
+            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
+                    + auditMetricVo.getCount());
         }
     }
 }

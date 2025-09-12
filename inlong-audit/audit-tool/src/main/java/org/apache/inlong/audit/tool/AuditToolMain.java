@@ -24,8 +24,6 @@ import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 
-import java.util.List;
-
 public class AuditToolMain {
 
     public static void main(String[] args) {
