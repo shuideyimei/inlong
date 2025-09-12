@@ -17,35 +17,15 @@
 
 package org.apache.inlong.audit.tool.util;
 
-import org.apache.inlong.audit.entity.AuditType;
-import org.apache.inlong.audit.entity.FlowType;
-import org.apache.inlong.audit.exceptions.AuditTypeNotExistException;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.inlong.audit.entity.AuditType.AGENT;
-import static org.apache.inlong.audit.entity.AuditType.BINLOG;
-import static org.apache.inlong.audit.entity.AuditType.BSS;
-import static org.apache.inlong.audit.entity.AuditType.CLICKHOUSE;
-import static org.apache.inlong.audit.entity.AuditType.DATAPROXY;
-import static org.apache.inlong.audit.entity.AuditType.DORIS;
-import static org.apache.inlong.audit.entity.AuditType.ELASTICSEARCH;
-import static org.apache.inlong.audit.entity.AuditType.HBASE;
-import static org.apache.inlong.audit.entity.AuditType.HDFS;
-import static org.apache.inlong.audit.entity.AuditType.HIVE;
-import static org.apache.inlong.audit.entity.AuditType.HUDI;
-import static org.apache.inlong.audit.entity.AuditType.ICEBERG;
-import static org.apache.inlong.audit.entity.AuditType.ICEBERG_AO;
-import static org.apache.inlong.audit.entity.AuditType.KUDU;
-import static org.apache.inlong.audit.entity.AuditType.MYSQL;
-import static org.apache.inlong.audit.entity.AuditType.POSTGRES;
-import static org.apache.inlong.audit.entity.AuditType.SDK;
-import static org.apache.inlong.audit.entity.AuditType.STARROCKS;
-import static org.apache.inlong.audit.entity.AuditType.TDSQL_MYSQL;
-import static org.apache.inlong.audit.entity.AuditType.TUBEMQ;
-import static org.apache.inlong.audit.entity.FlowType.INPUT;
-import static org.apache.inlong.audit.entity.FlowType.OUTPUT;
+import static org.apache.inlong.audit.tool.util.AuditType.*;
+import static org.apache.inlong.audit.tool.util.FlowType.INPUT;
+import static org.apache.inlong.audit.tool.util.FlowType.OUTPUT;
+
 
 /**
  * Audit item management, each module is assigned two baseline audit item IDs, namely receiving and sending.
@@ -141,14 +121,4 @@ public enum AuditIdEnum {
         return auditType;
     }
 
-    public static AuditIdEnum getAuditId(String auditType, FlowType flowType) {
-        for (AuditIdEnum auditIdEnum : AuditIdEnum.values()) {
-            if (auditIdEnum.getFlowType() == flowType &&
-                    auditType.equalsIgnoreCase(auditIdEnum.getAuditType().value())) {
-                return auditIdEnum;
-            }
-        }
-        LOGGER.error("Error Audit type: {}, flow type {}: ", auditType, flowType);
-        throw new AuditTypeNotExistException(String.format("Audit type %s does not exist", auditType));
-    }
 }
