@@ -17,11 +17,10 @@
 
 package org.apache.inlong.audit.tool.service;
 
+import org.apache.ibatis.session.SqlSession;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.basemetric.mapper.AuditMapper;
 import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
-
-import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,104 +28,127 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 public class AuditMetricService {
-
     private Integer intervalTimeMinute;
 
-    private static final String DATAPROXY_AUDITID = "5";
+    private static final String DATAPROXY_AUDIT_ID = "5";
     private static final DateTimeFormatter LOGTS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditMetricService.class);
 
     public AuditMetricService() {
-        // Retrieve the time interval from the configuration file. If the relevant configuration cannot be found, it
-        // defaults to 1 minute
+        // Retrieve time interval from configuration file, default to 1 minute if not found
         Properties properties = new Properties();
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
             this.intervalTimeMinute = Integer.parseInt(properties.getProperty("audit.data.time.interval.minute", "1"));
         } catch (IOException e) {
             this.intervalTimeMinute = 1;
-            LOGGER.error("No time interval related configuration found, default is set to 1 minute");
+            LOGGER.error("No time interval configuration found, using default value of 1 minute");
         }
     }
 
     /**
-     * Query Datapoxy related data and return it
-     * @return
+     * Query DataProxy related audit metrics
+     * @return List of AuditMetricVo
      */
     public List<AuditMetricVo> getDataproxyAuditMetrics() {
-        // Retrieve the logts field, subtract intervalTimeMinute from the current system time
         String logts = getLogTs();
         SqlSession sqlSession = null;
-        List<AuditMetricVo> auditMetricVos = new ArrayList<>();
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            auditMetricVos = auditMapper.queryDataproxyAuditMetric(logts, DATAPROXY_AUDITID);
-            return auditMetricVos;
+            List<AuditMetricVo> auditMetricVos = auditMapper.queryDataproxyAuditMetric(logts, DATAPROXY_AUDIT_ID);
+            return auditMetricVos != null ? auditMetricVos : Collections.emptyList();
         } catch (Exception e) {
-            LOGGER.error("An exception occurred during the database query process!" + e.getMessage());
+            LOGGER.error("Exception occurred during database query: " + e.getMessage());
+            return Collections.emptyList();
         } finally {
-            sqlSession.close();
+            if (sqlSession != null) {
+                sqlSession.close();
+            }
         }
-        return auditMetricVos;
     }
 
     /**
-     * Retrieve Iceberg related data and return it
-     * @param auditIds
-     * @return
+     * Retrieve Iceberg related audit metrics
+     * @param auditIds List of audit IDs to query
+     * @return List of AuditMetricVo
      */
     public List<AuditMetricVo> getIcebergAuditMetrics(List<String> auditIds) {
+        if (auditIds == null || auditIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String logts = getLogTs();
         SqlSession sqlSession = null;
         List<AuditMetricVo> auditMetricVos = new ArrayList<>();
+
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            // Traverse each auditId, retrieve data from the database, and consolidate it into auditMetricVos
+
+            // Process each audit ID and aggregate results
             for (String auditId : auditIds) {
                 List<AuditMetricVo> tempList = auditMapper.queryDataproxyAuditMetric(logts, auditId);
-                if (tempList != null && tempList.size() > 0) {
+                if (tempList != null && !tempList.isEmpty()) {
                     auditMetricVos.addAll(tempList);
                 }
             }
             return auditMetricVos;
         } catch (Exception e) {
-            LOGGER.error("An exception occurred during the database query process!" + e.getMessage());
+            LOGGER.error("Exception occurred during database query: " + e.getMessage());
+            return Collections.emptyList();
         } finally {
-            sqlSession.close();
+            if (sqlSession != null) {
+                sqlSession.close();
+            }
         }
-        return auditMetricVos;
     }
 
+    /**
+     * Retrieve Hive related audit metrics
+     * @param auditIds List of audit IDs to query
+     * @return List of AuditMetricVo
+     */
     public List<AuditMetricVo> getHiveAuditMetrics(List<String> auditIds) {
+        if (auditIds == null || auditIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String logts = getLogTs();
         SqlSession sqlSession = null;
         List<AuditMetricVo> auditMetricVos = new ArrayList<>();
+
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            // Traverse each auditId, retrieve data from the database, and consolidate it into auditMetricVos
+
+            // Process each audit ID and aggregate results
             for (String auditId : auditIds) {
                 List<AuditMetricVo> tempList = auditMapper.queryDataproxyAuditMetric(logts, auditId);
-                if (tempList != null && tempList.size() > 0) {
+                if (tempList != null && !tempList.isEmpty()) {
                     auditMetricVos.addAll(tempList);
                 }
             }
             return auditMetricVos;
         } catch (Exception e) {
-            LOGGER.error("An exception occurred during the database query process!" + e.getMessage());
+            LOGGER.error("Exception occurred during database query: " + e.getMessage());
+            return Collections.emptyList();
         } finally {
-            sqlSession.close();
+            if (sqlSession != null) {
+                sqlSession.close();
+            }
         }
-        return auditMetricVos;
     }
 
-    // Get the value of the logts field used for querying
+    /**
+     * Get the log timestamp value for querying
+     * @return formatted timestamp string
+     */
     private String getLogTs() {
         return LocalDateTime.now()
                 .withSecond(0)

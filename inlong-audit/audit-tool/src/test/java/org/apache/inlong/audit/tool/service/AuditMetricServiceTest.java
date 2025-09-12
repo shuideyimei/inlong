@@ -18,60 +18,59 @@
 package org.apache.inlong.audit.tool.service;
 
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
-
+import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
+import org.apache.inlong.audit.tool.config.AppConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AuditMetricServiceTest {
-
     @Test
-    public void testGetDataproxyAuditMetrics() {
-        // 查询服务初始化
-        AuditMetricService auditMetricService = new AuditMetricService();
-        // 查询相关数据
+    public void testGetDataproxyAuditMetrics(){
+        //Query service initialization
+        AppConfig appConfig = new AppConfig();
+        AuditSQLUtil.initialize(appConfig.getProperties());
+        AuditMetricService auditMetricService=new AuditMetricService();
+        //Search for relevant data
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
-        // 输出数据
-        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
-            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
-                    + auditMetricVo.getCount());
+
+        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
+            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
         }
     }
 
     @Test
-    public void testGetIcebergAuditMetrics() {
-        // 查询服务初始化
-        AuditMetricService auditMetricService = new AuditMetricService();
+    public void testGetIcebergAuditMetrics(){
+        //Query service initialization
+        AppConfig appConfig = new AppConfig();
+        AuditSQLUtil.initialize(appConfig.getProperties());
+        AuditMetricService auditMetricService=new AuditMetricService();
 
-        // 获取iceberg的auditId列表
-        List<String> icebergAuditIds = new ArrayList<>();
+        //Search for relevant data
+        List<String> icebergAuditIds=new ArrayList<>();
         icebergAuditIds.add("1073741838");
 
-        // 查询相关数据
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
-        // 输出数据
-        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
-            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
-                    + auditMetricVo.getCount());
+        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
+            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
         }
     }
 
     @Test
-    public void testGetHiveAuditMetrics() {
-        // 查询服务初始化
-        AuditMetricService auditMetricService = new AuditMetricService();
+    public void testGetHiveAuditMetrics(){
 
-        // 获取hive的auditId列表
-        List<String> icebergAuditIds = new ArrayList<>();
+        AppConfig appConfig = new AppConfig();
+        AuditSQLUtil.initialize(appConfig.getProperties());
+        AuditMetricService auditMetricService=new AuditMetricService();
+
+
+        List<String> icebergAuditIds=new ArrayList<>();
         icebergAuditIds.add("1073741838");
 
-        // 查询相关数据
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getHiveAuditMetrics(icebergAuditIds);
-        // 输出数据
-        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
-            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
-                    + auditMetricVo.getCount());
+        for(AuditMetricVo auditMetricVo:dataproxyAuditMetrics){
+            System.out.println(auditMetricVo.getInlongGroupId()+" "+auditMetricVo.getInlongStreamId()+" "+auditMetricVo.getCount());
         }
     }
 }

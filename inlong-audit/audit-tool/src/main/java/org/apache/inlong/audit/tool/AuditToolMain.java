@@ -34,7 +34,6 @@ public class AuditToolMain {
 
         // Initialize manager client
         ManagerClient managerClient = new ManagerClient(appConfig);
-        List<String> strings = managerClient.fetchAuditIds();
 
         // Initialize reporters
         PrometheusReporter prometheusReporter = new PrometheusReporter();
