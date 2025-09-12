@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
  * AuditCheckTask class: Periodically fetches audit data and evaluates alert policies.
  */
 public class AuditCheckTask {
-
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final AlertEvaluator alertEvaluator;
     private final ManagerClient managerClient;
@@ -46,19 +45,30 @@ public class AuditCheckTask {
     private final AuditMetricService auditMetricService;
     private Integer executionIntervalTime;
 
-    public AuditCheckTask(
-            ManagerClient managerClient, AlertEvaluator alertEvaluator, AppConfig appConfig) {
-        this.managerClient = managerClient;
-        this.alertEvaluator = alertEvaluator;
-        this.auditMetricService = new AuditMetricService();
-        try {
-            this.executionIntervalTime =
-                    Integer.valueOf(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
-        } catch (Exception e) {
-            LOGGER.info("No configuration related to execution interval time was read, default setting is 1");
+public AuditCheckTask(
+        ManagerClient managerClient, AlertEvaluator alertEvaluator, AppConfig appConfig) {
+    this.managerClient = managerClient;
+    this.alertEvaluator = alertEvaluator;
+    this.auditMetricService = new AuditMetricService();
+    try {
+        if (appConfig != null && appConfig.getProperties() != null) {
+            String intervalStr = appConfig.getProperties().getProperty("audit.data.time.interval.minute");
+            if (intervalStr != null && !intervalStr.trim().isEmpty()) {
+                this.executionIntervalTime = Integer.valueOf(intervalStr.trim());
+            } else {
+                LOGGER.warn("Configuration property 'audit.data.time.interval.minute' is missing or empty, using default value: 1");
+                this.executionIntervalTime = 1;
+            }
+        } else {
+            LOGGER.warn("AppConfig or its properties is null, using default execution interval time: 1");
             this.executionIntervalTime = 1;
         }
+    } catch (NumberFormatException e) {
+        LOGGER.error("Failed to parse execution interval time from configuration, using default value: 1", e);
+        this.executionIntervalTime = 1;
     }
+}
+
 
     /**
      * Initiate the audit inspection task
@@ -71,43 +81,48 @@ public class AuditCheckTask {
      * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
-        // Obtain auditIds provided by the interface
-        List<String> auditIds = managerClient.fetchAuditIds();
-        List<String> icebergAuditIds = new ArrayList<>();
-        List<String> hiveAuditIds = new ArrayList<>();
+        String auditId = null;
+        List<AuditMetricVo> dataproxyAuditMetrics = null;
+        List<AuditMetricVo> storageAuditMetrics = null;
+        List<AuditAlertRule> alertRules = null;
 
-        // Classify auditIds as iceberg and dataproxy auditIds respectively
-        for (String auditId : auditIds) {
-            int auditIdInt = Integer.parseInt(auditId);
-
-            if (auditIdInt == AuditIdEnum.SORT_HIVE_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.SORT_HIVE_OUTPUT.getValue()) {
-                hiveAuditIds.add(auditId);
-            } else if (auditIdInt == AuditIdEnum.SORT_ICEBERG_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.SORT_ICEBERG_OUTPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.ICEBERG_AO_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.ICEBERG_AO_OUTPUT.getValue()) {
-                icebergAuditIds.add(auditId);
+        try {
+            // Obtain auditIds provided by the interface
+            auditId = managerClient.fetchAuditId();
+            if (auditId == null) {
+                System.err.println("Failed to fetch auditId from managerClient");
+                return;
             }
-        }
 
-        // Search for relevant data in the database using auditId
-        List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
-        List<AuditMetricVo> icebergAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
-        List<AuditMetricVo> hiveAuditMetrics = auditMetricService.getHiveAuditMetrics(hiveAuditIds);
+            // Search for relevant data in the database using auditId
+            dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
+            if (dataproxyAuditMetrics == null) {
+                dataproxyAuditMetrics = new ArrayList<>();
+            }
 
-        // Obtain alarm strategy
-        List<AuditAlertRule> alertRules = managerClient.fetchAlertRules();
+            // Get storage type mappings from configuration
+            storageAuditMetrics = auditMetricService.getStorageAuditMetrics(auditId);
+            if (storageAuditMetrics == null) {
+                storageAuditMetrics = new ArrayList<>();
+            }
 
-        for (AuditAlertRule alertRule : alertRules) {
-            // When the threshold condition is reached, output the alarm information to the console and report it to
-            // Prometheus
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, icebergAuditMetrics,
-                    alertRule, "iceberg");
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, hiveAuditMetrics, alertRule,
-                    "hive");
+            // Obtain alarm strategy
+            alertRules = managerClient.fetchAlertRules();
+            if (alertRules == null) {
+                alertRules = new ArrayList<>();
+            }
+
+            for (AuditAlertRule alertRule : alertRules) {
+                // When the threshold condition is reached, output the alarm information to the console and report it to
+                // Prometheus
+                alertEvaluator.evaluateAndReport(dataproxyAuditMetrics, storageAuditMetrics, alertRule);
+            }
+        } catch (Exception e) {
+            System.err.println("Error occurred during audit data checking: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
 
     /**
      * Stop the audit inspection task
