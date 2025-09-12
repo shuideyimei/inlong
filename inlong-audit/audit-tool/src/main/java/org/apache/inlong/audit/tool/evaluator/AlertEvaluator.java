@@ -17,10 +17,8 @@
 
 package org.apache.inlong.audit.tool.evaluator;
 
-import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.DTO.AuditData;
-import  org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
+import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
@@ -34,11 +32,6 @@ public class AlertEvaluator {
     private final PrometheusReporter prometheusReporter;
     @Getter
     private final ManagerClient managerClient;
-    @Getter
-    private AuditData auditData;
-    @Getter
-    private AlertPolicy alertpolicy;
-
     public AlertEvaluator(PrometheusReporter prometheusReporter,
             ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
