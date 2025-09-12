@@ -17,6 +17,8 @@
 
 package org.apache.inlong.manager.pojo.audit;
 
+import org.apache.inlong.manager.common.enums.NotifyType;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -60,8 +62,7 @@ public class AuditAlertRule {
     private String level;
 
     @ApiModelProperty("Notification type (EMAIL/SMS/HTTP)")
-    @Pattern(regexp = "^(EMAIL|SMS|HTTP)$", message = "Notification type must be one of EMAIL, SMS, or HTTP")
-    private String notifyType;
+    private NotifyType notifyType;
 
     @ApiModelProperty("Notification recipients (separated by commas for multiple recipients)")
     private String receivers;
@@ -71,7 +72,7 @@ public class AuditAlertRule {
     private Boolean enabled;
 
     @ApiModelProperty("Whether deleted")
-    private Integer isDeleted; // Use Integer to match database int(11) type
+    private Integer isDeleted = 0; // Use Integer to match database int(11) type
 
     @ApiModelProperty("Creator name")
     private String creator;
@@ -86,5 +87,13 @@ public class AuditAlertRule {
     private Date modifyTime;
 
     @ApiModelProperty("Version number")
-    private Integer version; // Add version field
+    private Integer version = 1; // Add version field
+
+    public NotifyType getNotifyType() {
+        return notifyType;
+    }
+
+    public void setNotifyType(NotifyType notifyType) {
+        this.notifyType = notifyType;
+    }
 }

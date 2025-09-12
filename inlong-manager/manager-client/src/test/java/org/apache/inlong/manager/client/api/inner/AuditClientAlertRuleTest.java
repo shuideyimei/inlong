@@ -18,11 +18,14 @@
 package org.apache.inlong.manager.client.api.inner;
 
 import org.apache.inlong.manager.client.api.inner.client.AuditClient;
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.common.exceptions.BusinessException;
 import org.apache.inlong.manager.common.util.JsonUtils;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 
 import org.junit.jupiter.api.Assertions;
@@ -127,7 +130,7 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/1.*"))
+                get(urlMatching("/inlong/manager/api/audit/alert/rule/get/1.*"))
                         .willReturn(
                                 okJson(JsonUtils.toJsonString(
                                         Response.success(expectedRule)))));
@@ -160,24 +163,26 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
         rule2.setId(2);
         rule2.setAlertName("High Delay Alert");
         rule2.setEnabled(true);
-
         List<AuditAlertRule> expectedRules = Arrays.asList(rule1, rule2);
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/enabled.*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(
                                 okJson(JsonUtils.toJsonString(
-                                        Response.success(expectedRules)))));
+                                        Response.success(
+                                                new PageResult<>(expectedRules, (long) expectedRules.size()))))));
 
         // Execute test
-        List<AuditAlertRule> result = AUDIT_CLIENT.listEnabled();
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setEnabled(true);
+        PageResult<AuditAlertRule> result = AUDIT_CLIENT.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertTrue(result.get(0).getEnabled());
-        Assertions.assertTrue(result.get(1).getEnabled());
+        Assertions.assertEquals(2, result.getList().size());
+        Assertions.assertTrue(result.getList().get(0).getEnabled());
+        Assertions.assertTrue(result.getList().get(1).getEnabled());
     }
 
     @Test
@@ -189,18 +194,21 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
 
         // Mock API response
         stubFor(
-                get(urlMatching("/inlong/manager/api/audit/alert/rule/list\\?inlongGroupId=test_group_001.*"))
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(
                                 okJson(JsonUtils.toJsonString(
-                                        Response.success(expectedRules)))));
+                                        Response.success(
+                                                new PageResult<>(expectedRules, (long) expectedRules.size()))))));
 
         // Execute test
-        List<AuditAlertRule> result = AUDIT_CLIENT.listRules("test_group_001", null);
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setInlongGroupId("test_group_001");
+        PageResult<AuditAlertRule> result = AUDIT_CLIENT.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals("test_group_001", result.get(0).getInlongGroupId());
+        Assertions.assertEquals(1, result.getList().size());
+        Assertions.assertEquals("test_group_001", result.getList().get(0).getInlongGroupId());
     }
 
     @Test
@@ -212,20 +220,23 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
 
         // Mock API response
         stubFor(
-                get(urlMatching(
-                        "/inlong/manager/api/audit/alert/rule/list\\?inlongGroupId=test_group_001&inlongStreamId=test_stream_001.*"))
-                                .willReturn(
-                                        okJson(JsonUtils.toJsonString(
-                                                Response.success(expectedRules)))));
+                post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
+                        .willReturn(
+                                okJson(JsonUtils.toJsonString(
+                                        Response.success(
+                                                new PageResult<>(expectedRules, (long) expectedRules.size()))))));
 
         // Execute test
-        List<AuditAlertRule> result = AUDIT_CLIENT.listRules("test_group_001", "test_stream_001");
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setInlongGroupId("test_group_001");
+        request.setInlongStreamId("test_stream_001");
+        PageResult<AuditAlertRule> result = AUDIT_CLIENT.listByCondition(request);
 
         // Verify result
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals("test_group_001", result.get(0).getInlongGroupId());
-        Assertions.assertEquals("test_stream_001", result.get(0).getInlongStreamId());
+        Assertions.assertEquals(1, result.getList().size());
+        Assertions.assertEquals("test_group_001", result.getList().get(0).getInlongGroupId());
+        Assertions.assertEquals("test_stream_001", result.getList().get(0).getInlongStreamId());
     }
 
     @Test
@@ -242,7 +253,7 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
 
         // Mock API response
         stubFor(
-                put(urlMatching("/inlong/manager/api/audit/alert/rule.*"))
+                put(urlMatching("/inlong/manager/api/audit/alert/rule/update.*"))
                         .willReturn(
                                 okJson(JsonUtils.toJsonString(
                                         Response.success(inputRule)))));
@@ -333,7 +344,7 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
         condition.setValue(1000);
         rule.setCondition(condition);
         rule.setLevel("ERROR");
-        rule.setNotifyType("EMAIL");
+        rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@example.com,monitor@example.com");
         rule.setEnabled(true);
         return rule;
@@ -354,7 +365,7 @@ public class AuditClientAlertRuleTest extends ClientFactoryTest {
         condition.setValue(1000);
         request.setCondition(condition);
         request.setLevel("ERROR");
-        request.setNotifyType("EMAIL");
+        request.setNotifyType(NotifyType.EMAIL);
         request.setReceivers("admin@example.com,monitor@example.com");
         request.setEnabled(true);
         return request;

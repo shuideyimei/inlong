@@ -15,37 +15,37 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.VO;
+package org.apache.inlong.audit.tool.util;
 
-import org.apache.inlong.audit.tool.DTO.AuditInfo;
+public enum AuditType {
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+    SDK("SDK"),
+    AGENT("Agent"),
+    DATAPROXY("DataProxy"),
+    HIVE("Hive"),
+    CLICKHOUSE("ClickHouse"),
+    ELASTICSEARCH("ElasticSearch"),
+    STARROCKS("StarRocks"),
+    HUDI("HuDi"),
+    ICEBERG("Iceberg"),
+    HBASE("HBase"),
+    DORIS("Doris"),
+    KUDU("Kudu"),
+    POSTGRES("Postgres"),
+    BINLOG("MYSQL_BINLOG"),
+    TUBEMQ("TubeMQ"),
+    MYSQL("MYSQL"),
+    HDFS("HDFS"),
+    TDSQL_MYSQL("TDSQL_MYSQL"),
+    BSS("BSS"),
+    ICEBERG_AO("ICEBERG_AO");
 
-import java.util.List;
+    private final String auditType;
 
-/**
- * The VO of audit.
- */
-@Data
-public class AuditVO {
-
-    @ApiModelProperty(value = "Audit id")
-    private String auditId;
-    @ApiModelProperty(value = "Audit name")
-    private String auditName;
-    @ApiModelProperty(value = "Audit set")
-    private List<AuditInfo> auditSet;
-    @ApiModelProperty(value = "Node type")
-    private String nodeType;
-
-    public AuditVO() {
+    AuditType(String auditType) {
+        this.auditType = auditType;
     }
-
-    public AuditVO(String auditId, String auditName, List<AuditInfo> auditSet, String nodeType) {
-        this.auditId = auditId;
-        this.auditName = auditName;
-        this.auditSet = auditSet;
-        this.nodeType = nodeType;
+    public String value() {
+        return auditType;
     }
 }

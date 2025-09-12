@@ -18,19 +18,14 @@
 package org.apache.inlong.manager.service.core;
 
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
-
-import java.util.List;
+import org.apache.inlong.manager.pojo.common.PageResult;
 
 /**
  * The service interface for audit alert rule.
  */
 public interface AuditAlertRuleService {
-
-    /**
-     * Create an audit alert rule
-     */
-    AuditAlertRule create(AuditAlertRule rule, String operator);
 
     /**
      * Create an audit alert rule from request
@@ -43,27 +38,17 @@ public interface AuditAlertRuleService {
     AuditAlertRule get(Integer id);
 
     /**
-     * Update the audit alert rule
-     */
-    AuditAlertRule update(AuditAlertRule rule, String operator);
-
-    /**
      * Update the audit alert rule from request
      */
     AuditAlertRule update(AuditAlertRuleRequest request, String operator);
 
     /**
-     * Delete the audit alert rule
+     * Delete the audit alert rule 
      */
     Boolean delete(Integer id);
 
     /**
-     * List audit alert rules by condition
+     * Select audit alert rules by condition with pagination
      */
-    List<AuditAlertRule> listRules(String inlongGroupId, String inlongStreamId);
-
-    /**
-     * List all enabled audit alert rules
-     */
-    List<AuditAlertRule> listEnabled();
+    PageResult<AuditAlertRule> selectByCondition(AuditAlertRulePageRequest request);
 }

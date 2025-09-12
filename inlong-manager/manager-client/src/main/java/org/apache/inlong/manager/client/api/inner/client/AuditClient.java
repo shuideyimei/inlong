@@ -23,9 +23,11 @@ import org.apache.inlong.manager.client.api.util.ClientUtils;
 import org.apache.inlong.manager.common.enums.ErrorCodeEnum;
 import org.apache.inlong.manager.common.util.Preconditions;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
 import org.apache.inlong.manager.pojo.audit.AuditRequest;
 import org.apache.inlong.manager.pojo.audit.AuditVO;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 
 import java.util.List;
@@ -121,26 +123,14 @@ public class AuditClient {
     }
 
     /**
-     * List all enabled audit alert rules
+     * Select audit alert rules by condition with pagination
      *
-     * @return List of enabled audit alert rules
+     * @param request The condition to filter audit alert rules
+     * @return Page result of audit alert rules
      */
-    public List<AuditAlertRule> listEnabled() {
-        Response<List<AuditAlertRule>> response = ClientUtils.executeHttpCall(auditApi.listEnabled());
-        ClientUtils.assertRespSuccess(response);
-        return response.getData();
-    }
-
-    /**
-     * List audit alert rules by conditions
-     *
-     * @param inlongGroupId The inlong group ID (optional)
-     * @param inlongStreamId The inlong stream ID (optional)
-     * @return List of audit alert rules
-     */
-    public List<AuditAlertRule> listRules(String inlongGroupId, String inlongStreamId) {
-        Response<List<AuditAlertRule>> response = ClientUtils.executeHttpCall(
-                auditApi.listRules(inlongGroupId, inlongStreamId));
+    public PageResult<AuditAlertRule> listByCondition(AuditAlertRulePageRequest request) {
+        Response<PageResult<AuditAlertRule>> response = ClientUtils.executeHttpCall(
+                auditApi.listByCondition(request));
         ClientUtils.assertRespSuccess(response);
         return response.getData();
     }
@@ -163,7 +153,7 @@ public class AuditClient {
      * Delete an audit alert rule by ID
      *
      * @param id The rule ID
-     * @return true if deletion was successful
+     * @return True if deletion is successful, false otherwise
      */
     public Boolean delete(Integer id) {
         Preconditions.expectNotNull(id, "rule id cannot be null");

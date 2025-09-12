@@ -15,24 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.manager.dao.mapper;
+package org.apache.inlong.audit.tool.util;
 
-import org.apache.inlong.manager.dao.entity.AuditAlertRuleEntity;
+public enum FlowType {
 
-import org.springframework.stereotype.Repository;
+    INPUT("received", " 接收"),
+    OUTPUT("send", " 发送");
+    private final String nameInEnglish;
+    private final String nameInChinese;
 
-import java.util.List;
+    FlowType(String nameInEnglish, String nameInChinese) {
+        this.nameInEnglish = nameInEnglish;
+        this.nameInChinese = nameInChinese;
+    }
 
-@Repository
-public interface AuditAlertRuleEntityMapper {
+    public String getNameInEnglish() {
+        return nameInEnglish;
+    }
 
-    int insert(AuditAlertRuleEntity entity);
-
-    int updateById(AuditAlertRuleEntity entity);
-
-    int deleteById(Integer id);
-
-    AuditAlertRuleEntity selectById(Integer id);
-
-    List<AuditAlertRuleEntity> selectByCondition(AuditAlertRuleEntity condition);
+    public String getNameInChinese() {
+        return nameInChinese;
+    }
 }

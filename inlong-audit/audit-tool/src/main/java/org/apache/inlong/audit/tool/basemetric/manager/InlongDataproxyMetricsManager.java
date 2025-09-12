@@ -37,46 +37,52 @@ public class InlongDataproxyMetricsManager {
     private Gauge dataproxyAbandonRateGauge;
     private Gauge dataproxyLossRateGauge;
 
-    public InlongDataproxyMetricsManager(CollectorRegistry collectorRegistry,Integer periodSeconds) {
+    public InlongDataproxyMetricsManager(CollectorRegistry collectorRegistry, Integer periodSeconds) {
         this.collectorRegistry = collectorRegistry;
-        this.periodSeconds=periodSeconds;
+        this.periodSeconds = periodSeconds;
         initMetrics();
     }
 
     private void initMetrics() {
         dataproxyReceiveSuccessNumGauge = Gauge.build()
                 .name("inlong_dataproxy_receive_num_interval")
-                .help("Number of messages received successfully by Inlong Dataproxy in the last " + periodSeconds + " seconds")
+                .help("Number of messages received successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxyReceiveSuccessSizeGauge = Gauge.build()
                 .name("inlong_dataproxy_receive_size_interval")
-                .help("Size of messages received successfully by Inlong Dataproxy in the last " + periodSeconds + " seconds")
+                .help("Size of messages received successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxyReceiveSuccessAvgDelayGauge = Gauge.build()
                 .name("inlong_dataproxy_receive_avg_delay_interval")
-                .help("Average delay of messages received successfully by Inlong Dataproxy in the last " + periodSeconds + " seconds")
+                .help("Average delay of messages received successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxySendSuccessNumGauge = Gauge.build()
                 .name("inlong_dataproxy_send_num_interval")
-                .help("Number of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds+ " seconds")
+                .help("Number of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxySendSuccessSizeGauge = Gauge.build()
                 .name("inlong_dataproxy_send_size_interval")
-                .help("Size of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds+ " seconds")
+                .help("Size of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxySendSuccessAvgDelayGauge = Gauge.build()
                 .name("inlong_dataproxy_send_avg_delay_interval")
-                .help("Average delay of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds+ " seconds")
+                .help("Average delay of messages sent successfully by Inlong Dataproxy in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         dataproxyAbandonRateGauge = Gauge.build()
                 .name("inlong_dataproxy_abandon_rate_interval")
-                .help("Abandon rate of messages by Inlong Dataproxy in the last " + periodSeconds+ " seconds")
+                .help("Abandon rate of messages by Inlong Dataproxy in the last " + periodSeconds + " seconds")
                 .register(collectorRegistry);
 
         dataproxyLossRateGauge = Gauge.build()

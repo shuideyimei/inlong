@@ -18,9 +18,11 @@
 package org.apache.inlong.manager.client.api.service;
 
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
 import org.apache.inlong.manager.pojo.audit.AuditRequest;
 import org.apache.inlong.manager.pojo.audit.AuditVO;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 
 import retrofit2.Call;
@@ -30,7 +32,6 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 import java.util.List;
 
@@ -45,22 +46,16 @@ public interface AuditApi {
     @POST("audit/refreshCache")
     Call<Response<Boolean>> refreshCache();
 
-    // Audit Alert Rule APIs
     @POST("audit/alert/rule")
     Call<Response<Integer>> create(@Body AuditAlertRuleRequest request);
 
-    @GET("audit/alert/rule/{id}")
+    @GET("audit/alert/rule/get/{id}")
     Call<Response<AuditAlertRule>> get(@Path("id") Integer id);
 
-    @GET("audit/alert/rule/enabled")
-    Call<Response<List<AuditAlertRule>>> listEnabled();
+    @POST("audit/alert/rule/list")
+    Call<Response<PageResult<AuditAlertRule>>> listByCondition(@Body AuditAlertRulePageRequest request);
 
-    @GET("audit/alert/rule/list")
-    Call<Response<List<AuditAlertRule>>> listRules(
-            @Query("inlongGroupId") String inlongGroupId,
-            @Query("inlongStreamId") String inlongStreamId);
-
-    @PUT("audit/alert/rule")
+    @PUT("audit/alert/rule/update")
     Call<Response<AuditAlertRule>> update(@Body AuditAlertRule rule);
 
     @DELETE("audit/delete/{id}")

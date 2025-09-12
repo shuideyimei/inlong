@@ -17,6 +17,7 @@
 
 package org.apache.inlong.manager.pojo.audit;
 
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.common.validation.UpdateValidation;
 
 import io.swagger.annotations.ApiModel;
@@ -59,8 +60,7 @@ public class AuditAlertRuleRequest {
     private String level;
 
     @ApiModelProperty("Notification type (EMAIL/SMS/HTTP)")
-    @Pattern(regexp = "^(EMAIL|SMS|HTTP)$", message = "Notification type must be one of EMAIL, SMS, or HTTP")
-    private String notifyType;
+    private NotifyType notifyType;
 
     @ApiModelProperty("Notification recipients (separated by commas for multiple recipients)")
     private String receivers;

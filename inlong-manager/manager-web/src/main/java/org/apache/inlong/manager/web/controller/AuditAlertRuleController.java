@@ -19,7 +19,9 @@ package org.apache.inlong.manager.web.controller;
 
 import org.apache.inlong.manager.common.validation.UpdateValidation;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.pojo.common.Response;
 import org.apache.inlong.manager.pojo.user.LoginUserUtils;
 import org.apache.inlong.manager.service.core.AuditAlertRuleService;
@@ -36,12 +38,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-
-import java.util.List;
 
 /**
  * Audit alert rule controller.
@@ -55,7 +54,7 @@ public class AuditAlertRuleController {
     @Autowired
     private AuditAlertRuleService auditAlertRuleService;
 
-    @PostMapping(value = "/audit/alert/rule/save")
+    @PostMapping(value = "/audit/alert/rule")
     @ApiOperation(value = "Create an Audit alarm policy")
     public Response<Integer> create(@Valid @RequestBody AuditAlertRuleRequest request) {
         String operator = LoginUserUtils.getLoginUser().getName();
@@ -69,18 +68,10 @@ public class AuditAlertRuleController {
         return Response.success(auditAlertRuleService.get(id));
     }
 
-    @GetMapping(value = "/audit/alert/rule/listEnabled")
-    @ApiOperation(value = "Query all enabled alarm policies")
-    public Response<List<AuditAlertRule>> listEnabled() {
-        return Response.success(auditAlertRuleService.listEnabled());
-    }
-
-    @GetMapping(value = "/audit/alert/rule/list")
+    @PostMapping(value = "/audit/alert/rule/list")
     @ApiOperation(value = "Batch query alarm policies")
-    public Response<List<AuditAlertRule>> listRules(
-            @RequestParam(required = false) String inlongGroupId,
-            @RequestParam(required = false) String inlongStreamId) {
-        return Response.success(auditAlertRuleService.listRules(inlongGroupId, inlongStreamId));
+    public Response<PageResult<AuditAlertRule>> selectByCondition(@RequestBody AuditAlertRulePageRequest request) {
+        return Response.success(auditAlertRuleService.selectByCondition(request));
     }
 
     @PutMapping(value = "/audit/alert/rule/update")

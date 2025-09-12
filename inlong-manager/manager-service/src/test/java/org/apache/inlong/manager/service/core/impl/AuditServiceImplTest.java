@@ -17,11 +17,14 @@
 
 package org.apache.inlong.manager.service.core.impl;
 
+import org.apache.inlong.manager.common.enums.NotifyType;
 import org.apache.inlong.manager.dao.entity.AuditAlertRuleEntity;
 import org.apache.inlong.manager.dao.mapper.AuditAlertRuleEntityMapper;
 import org.apache.inlong.manager.pojo.audit.AuditAlertCondition;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRule;
+import org.apache.inlong.manager.pojo.audit.AuditAlertRulePageRequest;
 import org.apache.inlong.manager.pojo.audit.AuditAlertRuleRequest;
+import org.apache.inlong.manager.pojo.common.PageResult;
 import org.apache.inlong.manager.service.ServiceBaseTest;
 import org.apache.inlong.manager.service.core.AuditAlertRuleService;
 
@@ -51,16 +54,15 @@ class AuditServiceImplTest extends ServiceBaseTest {
         entity.setAlertName("Service Test Alert");
         entity.setCondition("{\"type\": \"data_loss\", \"operator\": \">\", \"value\": 5}");
         entity.setLevel("WARN");
-        entity.setNotifyType("EMAIL");
+        entity.setNotifyType(NotifyType.EMAIL.name());
         entity.setReceivers("service@test.com");
         entity.setEnabled(true);
-        entity.setIsDeleted(0);
         entity.setCreator("test_user");
         entity.setModifier("test_user");
+        entity.setIsDeleted(0);
+        entity.setVersion(1); // Set version before insert
         entity.setCreateTime(new Date());
         entity.setModifyTime(new Date());
-        entity.setVersion(1);
-
         auditAlertRuleMapper.insert(entity);
         return entity;
     }
@@ -74,21 +76,21 @@ class AuditServiceImplTest extends ServiceBaseTest {
         AuditAlertRuleEntity freshEntity = auditAlertRuleMapper.selectById(entity.getId());
 
         // Create update request
-        AuditAlertRule rule = new AuditAlertRule();
-        rule.setId(freshEntity.getId());
-        rule.setLevel("CRITICAL");
-        rule.setNotifyType("SMS");
-        rule.setReceivers("updated_service@test.com");
-        rule.setEnabled(false);
-        rule.setVersion(freshEntity.getVersion());
+        AuditAlertRuleRequest request = new AuditAlertRuleRequest();
+        request.setId(freshEntity.getId());
+        request.setLevel("CRITICAL");
+        request.setNotifyType(NotifyType.SMS);
+        request.setReceivers("updated_service@test.com");
+        request.setEnabled(false);
+        request.setVersion(freshEntity.getVersion());
 
         // Update the rule
-        AuditAlertRule updatedRule = auditAlertRuleService.update(rule, "test_user");
+        AuditAlertRule updatedRule = auditAlertRuleService.update(request, "test_user");
 
         // Verify the update
         Assertions.assertNotNull(updatedRule);
         Assertions.assertEquals("CRITICAL", updatedRule.getLevel());
-        Assertions.assertEquals("SMS", updatedRule.getNotifyType());
+        Assertions.assertEquals(NotifyType.SMS, updatedRule.getNotifyType());
         Assertions.assertEquals("updated_service@test.com", updatedRule.getReceivers());
         Assertions.assertFalse(updatedRule.getEnabled());
         Assertions.assertEquals(freshEntity.getVersion() + 1, updatedRule.getVersion().intValue());
@@ -97,7 +99,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         AuditAlertRuleEntity updatedEntity = auditAlertRuleMapper.selectById(entity.getId());
         Assertions.assertNotNull(updatedEntity);
         Assertions.assertEquals("CRITICAL", updatedEntity.getLevel());
-        Assertions.assertEquals("SMS", updatedEntity.getNotifyType());
+        Assertions.assertEquals(NotifyType.SMS.name(), updatedEntity.getNotifyType());
         Assertions.assertEquals("updated_service@test.com", updatedEntity.getReceivers());
         Assertions.assertFalse(updatedEntity.getEnabled());
         Assertions.assertEquals(freshEntity.getVersion() + 1, updatedEntity.getVersion().intValue());
@@ -117,7 +119,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         condition.setValue(5);
         request.setCondition(condition);
         request.setLevel("WARN");
-        request.setNotifyType("EMAIL");
+        request.setNotifyType(NotifyType.EMAIL);
         request.setReceivers("service_request@test.com");
         request.setEnabled(true);
         request.setVersion(1);
@@ -134,7 +136,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         Assertions.assertEquals("test_group_service_request", entity.getInlongGroupId());
         Assertions.assertEquals("Service Test Alert From Request", entity.getAlertName());
         Assertions.assertEquals("WARN", entity.getLevel());
-        Assertions.assertEquals("EMAIL", entity.getNotifyType());
+        Assertions.assertEquals(NotifyType.EMAIL.name(), entity.getNotifyType());
         Assertions.assertEquals("service_request@test.com", entity.getReceivers());
         Assertions.assertTrue(entity.getEnabled());
         Assertions.assertEquals(0, entity.getIsDeleted().intValue());
@@ -153,7 +155,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         AuditAlertRuleRequest updateRequest = new AuditAlertRuleRequest();
         updateRequest.setId(freshEntity.getId());
         updateRequest.setLevel("CRITICAL");
-        updateRequest.setNotifyType("SMS");
+        updateRequest.setNotifyType(NotifyType.SMS);
         updateRequest.setReceivers("updated_service_request@test.com");
         updateRequest.setEnabled(false);
         updateRequest.setVersion(freshEntity.getVersion());
@@ -164,7 +166,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         // Verify the update
         Assertions.assertNotNull(updatedRule);
         Assertions.assertEquals("CRITICAL", updatedRule.getLevel());
-        Assertions.assertEquals("SMS", updatedRule.getNotifyType());
+        Assertions.assertEquals(NotifyType.SMS, updatedRule.getNotifyType());
         Assertions.assertEquals("updated_service_request@test.com", updatedRule.getReceivers());
         Assertions.assertFalse(updatedRule.getEnabled());
         Assertions.assertEquals(freshEntity.getVersion() + 1, updatedRule.getVersion().intValue());
@@ -173,7 +175,7 @@ class AuditServiceImplTest extends ServiceBaseTest {
         AuditAlertRuleEntity updatedEntity = auditAlertRuleMapper.selectById(entity.getId());
         Assertions.assertNotNull(updatedEntity);
         Assertions.assertEquals("CRITICAL", updatedEntity.getLevel());
-        Assertions.assertEquals("SMS", updatedEntity.getNotifyType());
+        Assertions.assertEquals(NotifyType.SMS.name(), updatedEntity.getNotifyType());
         Assertions.assertEquals("updated_service_request@test.com", updatedEntity.getReceivers());
         Assertions.assertFalse(updatedEntity.getEnabled());
         Assertions.assertEquals(freshEntity.getVersion() + 1, updatedEntity.getVersion().intValue());
@@ -191,15 +193,15 @@ class AuditServiceImplTest extends ServiceBaseTest {
         entity2.setAlertName("Enabled Rule");
         entity2.setCondition("{\"type\": \"count\", \"operator\": \">\", \"value\": 100}");
         entity2.setLevel("INFO");
-        entity2.setNotifyType("EMAIL");
+        entity2.setNotifyType(NotifyType.EMAIL.name());
         entity2.setReceivers("enabled@test.com");
         entity2.setEnabled(true); // Enabled
-        entity2.setIsDeleted(0);
         entity2.setCreator("test_user");
         entity2.setModifier("test_user");
+        entity2.setIsDeleted(0);
+        entity2.setVersion(1); // Set version before insert
         entity2.setCreateTime(new Date());
         entity2.setModifyTime(new Date());
-        entity2.setVersion(1);
         auditAlertRuleMapper.insert(entity2);
 
         // Create disabled rule
@@ -209,35 +211,89 @@ class AuditServiceImplTest extends ServiceBaseTest {
         entity3.setAlertName("Disabled Rule");
         entity3.setCondition("{\"type\": \"delay\", \"operator\": \">\", \"value\": 1000}");
         entity3.setLevel("ERROR");
-        entity3.setNotifyType("SMS");
+        entity3.setNotifyType(NotifyType.SMS.name());
         entity3.setReceivers("disabled@test.com");
         entity3.setEnabled(false); // Disabled
-        entity3.setIsDeleted(0);
         entity3.setCreator("test_user");
         entity3.setModifier("test_user");
+        entity3.setIsDeleted(0);
+        entity3.setVersion(1); // Set version before insert
         entity3.setCreateTime(new Date());
         entity3.setModifyTime(new Date());
-        entity3.setVersion(1);
         auditAlertRuleMapper.insert(entity3);
 
-        // List enabled rules
-        List<AuditAlertRule> enabledRules = auditAlertRuleService.listEnabled();
+        // Test select by condition for enabled rules (replacing listEnabled)
+        AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
+        request.setEnabled(true);
+        PageResult<AuditAlertRule> pageResult = auditAlertRuleService.selectByCondition(request);
+        List<AuditAlertRule> enabledRules = pageResult.getList();
 
         // Verify the result
         Assertions.assertNotNull(enabledRules);
         // Should have at least the two enabled rules
         Assertions.assertTrue(enabledRules.size() >= 2);
         // All rules should be enabled
-        Assertions.assertTrue(enabledRules.stream().allMatch(AuditAlertRule::getEnabled));
+        Assertions.assertTrue(enabledRules.stream().allMatch(rule -> rule.getEnabled()));
         // All rules should not be deleted
         Assertions.assertTrue(enabledRules.stream().allMatch(rule -> rule.getIsDeleted() == 0));
         // Should contain our enabled rule
         boolean foundEnabledRule = enabledRules.stream()
                 .anyMatch(rule -> "Enabled Rule".equals(rule.getAlertName()));
         Assertions.assertTrue(foundEnabledRule);
-        // Should not contain our disabled rule
-        boolean foundDisabledRule = enabledRules.stream()
-                .anyMatch(rule -> "Disabled Rule".equals(rule.getAlertName()));
-        Assertions.assertFalse(foundDisabledRule);
+    }
+
+    @Test
+    void testSelectByCondition() {
+        // Insert test data
+        AuditAlertRuleEntity entity1 = insertTestEntity();
+
+        // Create another rule with different group ID
+        AuditAlertRuleEntity entity2 = new AuditAlertRuleEntity();
+        entity2.setInlongGroupId("test_group_service_select");
+        entity2.setInlongStreamId("test_stream_service_select");
+        entity2.setAuditId("4");
+        entity2.setAlertName("Select Test Rule");
+        entity2.setCondition("{\"type\": \"count\", \"operator\": \">\", \"value\": 100}");
+        entity2.setLevel("INFO");
+        entity2.setNotifyType(NotifyType.EMAIL.name());
+        entity2.setReceivers("select@test.com");
+        entity2.setEnabled(true);
+        entity2.setCreator("test_user");
+        entity2.setModifier("test_user");
+        entity2.setIsDeleted(0);
+        entity2.setVersion(1); // Set version before insert
+        entity2.setCreateTime(new Date());
+        entity2.setModifyTime(new Date());
+        auditAlertRuleMapper.insert(entity2);
+
+        // Test select by condition - filter by group ID
+        AuditAlertRulePageRequest request1 = new AuditAlertRulePageRequest();
+        request1.setInlongGroupId("test_group_service_select");
+        PageResult<AuditAlertRule> pageResult1 = auditAlertRuleService.selectByCondition(request1);
+        List<AuditAlertRule> rules1 = pageResult1.getList();
+        Assertions.assertNotNull(rules1);
+        Assertions.assertEquals(1, rules1.size());
+        Assertions.assertEquals("test_group_service_select", rules1.get(0).getInlongGroupId());
+        Assertions.assertEquals("Select Test Rule", rules1.get(0).getAlertName());
+
+        // Test select by condition - filter by alert name
+        AuditAlertRulePageRequest request2 = new AuditAlertRulePageRequest();
+        request2.setAlertName("Service Test Alert");
+        PageResult<AuditAlertRule> pageResult2 = auditAlertRuleService.selectByCondition(request2);
+        List<AuditAlertRule> rules2 = pageResult2.getList();
+        Assertions.assertNotNull(rules2);
+        Assertions.assertEquals(1, rules2.size());
+        Assertions.assertEquals("test_group_service", rules2.get(0).getInlongGroupId());
+        Assertions.assertEquals("Service Test Alert", rules2.get(0).getAlertName());
+
+        // Test select by condition - no filter (should return all non-deleted rules)
+        AuditAlertRulePageRequest request3 = new AuditAlertRulePageRequest();
+        PageResult<AuditAlertRule> pageResult3 = auditAlertRuleService.selectByCondition(request3);
+        List<AuditAlertRule> rules3 = pageResult3.getList();
+        Assertions.assertNotNull(rules3);
+        // Should have at least the two rules we inserted
+        Assertions.assertTrue(rules3.size() >= 2);
+        // All rules should not be deleted
+        Assertions.assertTrue(rules3.stream().allMatch(rule -> rule.getIsDeleted() == 0));
     }
 }

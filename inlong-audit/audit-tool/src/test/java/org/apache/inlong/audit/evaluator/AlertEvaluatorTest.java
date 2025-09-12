@@ -15,24 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.manager.dao.mapper;
+package org.apache.inlong.audit.evaluator;
 
-import org.apache.inlong.manager.dao.entity.AuditAlertRuleEntity;
-
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-
-@Repository
-public interface AuditAlertRuleEntityMapper {
-
-    int insert(AuditAlertRuleEntity entity);
-
-    int updateById(AuditAlertRuleEntity entity);
-
-    int deleteById(Integer id);
-
-    AuditAlertRuleEntity selectById(Integer id);
-
-    List<AuditAlertRuleEntity> selectByCondition(AuditAlertRuleEntity condition);
+public class AlertEvaluatorTest {
 }
