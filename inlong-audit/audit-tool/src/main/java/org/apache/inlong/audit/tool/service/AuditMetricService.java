@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.service;
 
 import org.apache.ibatis.session.SqlSession;
@@ -24,7 +41,7 @@ public class AuditMetricService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditMetricService.class);
 
     public AuditMetricService(){
-        //从配置文件中获取时间间隔，如果未能找到相关配置，默认取60s，即1分钟
+        //Retrieve the time interval from the configuration file. If the relevant configuration cannot be found, it defaults to 1 minute
         Properties properties=new Properties();
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
@@ -33,45 +50,43 @@ public class AuditMetricService {
             this.intervalTimeMinute=1;
             LOGGER.error("No time interval related configuration found, default is set to 1 minute");
         }
-
-        //初始化数据库查询工具，获取数据库连接信息
-        AuditSQLUtil.initialize(properties);
     }
 
     /**
-     * 查询Datapoxy相关数据并返回
+     * Query Datapoxy related data and return it
      * @return
      */
     public List<AuditMetricVo> getDataproxyAuditMetrics(){
-        //获取logts字段，当前系统时间减去 intervalTimeMinute 分钟
+        //Retrieve the logts field, subtract intervalTimeMinute from the current system time
         String logts=getLogTs();
         SqlSession sqlSession = null;
+        List<AuditMetricVo> auditMetricVos=new ArrayList<>();
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            List<AuditMetricVo> auditMetricVos = auditMapper.queryDataproxyAuditMetric(logts,DATAPROXY_AUDITID);
+            auditMetricVos = auditMapper.queryDataproxyAuditMetric(logts,DATAPROXY_AUDITID);
             return auditMetricVos;
         }catch (Exception e){
-            LOGGER.error("查询数据库过程出现异常!"+e.getMessage());
+            LOGGER.error("An exception occurred during the database query process!"+e.getMessage());
         } finally {
             sqlSession.close();
         }
-        return null;
+        return auditMetricVos;
     }
 
     /**
-     * 查询Iceberg相关数据并返回
+     * Retrieve Iceberg related data and return it
      * @param auditIds
      * @return
      */
     public List<AuditMetricVo> getIcebergAuditMetrics(List<String> auditIds){
         String logts=getLogTs();
         SqlSession sqlSession = null;
+        List<AuditMetricVo> auditMetricVos=new ArrayList<>();
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            //遍历每个auditId，搜出在数据库的数据，并且统一放入到auditMetricVos中
-            List<AuditMetricVo> auditMetricVos=new ArrayList<>();
+            //Traverse each auditId, retrieve data from the database, and consolidate it into auditMetricVos
             for(String auditId:auditIds){
                 List<AuditMetricVo> tempList = auditMapper.queryDataproxyAuditMetric(logts, auditId);
                 if(tempList!=null&&tempList.size()>0){
@@ -80,21 +95,21 @@ public class AuditMetricService {
             }
             return auditMetricVos;
         }catch (Exception e){
-            LOGGER.error("查询数据库过程出现异常!"+e.getMessage());
+            LOGGER.error("An exception occurred during the database query process!"+e.getMessage());
         } finally {
             sqlSession.close();
         }
-        return null;
+        return auditMetricVos;
     }
 
     public List<AuditMetricVo> getHiveAuditMetrics(List<String> auditIds){
         String logts=getLogTs();
         SqlSession sqlSession = null;
+        List<AuditMetricVo> auditMetricVos=new ArrayList<>();
         try {
             sqlSession = AuditSQLUtil.getSqlSession();
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
-            //遍历每个auditId，搜出在数据库的数据，并且统一放入到auditMetricVos中
-            List<AuditMetricVo> auditMetricVos=new ArrayList<>();
+            //Traverse each auditId, retrieve data from the database, and consolidate it into auditMetricVos
             for(String auditId:auditIds){
                 List<AuditMetricVo> tempList = auditMapper.queryDataproxyAuditMetric(logts, auditId);
                 if(tempList!=null&&tempList.size()>0){
@@ -103,73 +118,18 @@ public class AuditMetricService {
             }
             return auditMetricVos;
         }catch (Exception e){
-            LOGGER.error("查询数据库过程出现异常!"+e.getMessage());
+            LOGGER.error("An exception occurred during the database query process!"+e.getMessage());
         } finally {
             sqlSession.close();
         }
-        return null;
+        return auditMetricVos;
     }
 
-    //获取用于查询的logts字段的值
+    //Get the value of the logts field used for querying
     private String getLogTs(){
-        return LocalDateTime.now()        // 当前时间
-                .withSecond(0) // 秒置 00
-                .minusMinutes(intervalTimeMinute) // 减分钟
+        return LocalDateTime.now()
+                .withSecond(0)
+                .minusMinutes(intervalTimeMinute)
                 .format(LOGTS_FMT);
-    }
-
-    //模拟生成假数据
-    public Map<String, List<AuditMetricVo>> generateTestData() {
-        Map<String, List<AuditMetricVo>> result = new HashMap<>();
-        List<AuditMetricVo> dataproxy = new ArrayList<>(1000);
-        List<AuditMetricVo> iceberg  = new ArrayList<>(500);
-        List<AuditMetricVo> hive     = new ArrayList<>(500);
-
-        ThreadLocalRandom rnd = ThreadLocalRandom.current();
-
-        /* 1. 生成 1000 条 DataProxy 指标，groupId / streamId 全局唯一 */
-        for (int i = 0; i < 1000; i++) {
-            AuditMetricVo vo = new AuditMetricVo();
-            vo.setInlongGroupId("g_" + i);
-            vo.setInlongStreamId("s_" + i);
-            vo.setCount(rnd.nextLong(10, 10000));
-            dataproxy.add(vo);
-        }
-
-        /* 2. 随机 50 % 变成 Iceberg，10 % 概率把 count 改小 */
-        Collections.shuffle(dataproxy, rnd);
-        for (int i = 0; i < 500; i++) {
-            AuditMetricVo copy = clone(dataproxy.get(i));
-            if (rnd.nextDouble() < 0.1) { // 10 % 概率
-                long reduce = 1 + (long) (copy.getCount() * rnd.nextDouble(0.01, 0.10));
-                copy.setCount(Math.max(1L, copy.getCount() - reduce));
-            }
-            iceberg.add(copy);
-        }
-
-        /* 3. 再随机 50 % 变成 Hive，同样 10 % 概率把 count 改小 */
-        Collections.shuffle(dataproxy, rnd);
-        for (int i = 0; i < 500; i++) {
-            AuditMetricVo copy = clone(dataproxy.get(i));
-            if (rnd.nextDouble() < 0.1) {
-                long reduce = 1 + (long) (copy.getCount() * rnd.nextDouble(0.01, 0.10));
-                copy.setCount(Math.max(1L, copy.getCount() - reduce));
-            }
-            hive.add(copy);
-        }
-
-        result.put("dataproxy", dataproxy);
-        result.put("iceberg", iceberg);
-        result.put("hive", hive);
-        return result;
-    }
-
-    /* 浅拷贝工具 */
-    private AuditMetricVo clone(AuditMetricVo src) {
-        AuditMetricVo vo = new AuditMetricVo();
-        vo.setInlongGroupId(src.getInlongGroupId());
-        vo.setInlongStreamId(src.getInlongStreamId());
-        vo.setCount(src.getCount());
-        return vo;
     }
 }
