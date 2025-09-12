@@ -223,7 +223,6 @@ public class AuditApiAlertRuleTest {
 
         // Execute test
         AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
-        // 不设置参数，相当于查询所有
         Call<Response<PageResult<AuditAlertRule>>> call = auditApi.listByCondition(request);
         Response<PageResult<AuditAlertRule>> response = call.execute().body();
 

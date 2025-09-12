@@ -220,7 +220,7 @@ public class AuditAlertRuleIntegrationTest {
                 post(urlMatching("/inlong/manager/api/audit/alert/rule/list.*"))
                         .willReturn(okJson(responseBody)));
 
-        // Execute test - 使用listByCondition替代selectByCondition
+        // Execute test
         AuditAlertRulePageRequest request = new AuditAlertRulePageRequest();
         request.setInlongGroupId(TEST_GROUP_ID);
         PageResult<AuditAlertRule> result = auditClient.listByCondition(request);
