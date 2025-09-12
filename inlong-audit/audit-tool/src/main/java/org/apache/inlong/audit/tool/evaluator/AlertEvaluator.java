@@ -22,10 +22,10 @@ import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
-import org.apache.inlong.audit.tool.config.ConfigConstants;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.apache.inlong.audit.tool.config.ConfigConstants.*;
 
 import java.util.List;
 import java.util.Map;
@@ -36,8 +36,6 @@ public class AlertEvaluator {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlertEvaluator.class);
-
-
     private final PrometheusReporter prometheusReporter;
     @Getter
     private final ManagerClient managerClient;
@@ -59,14 +57,12 @@ public class AlertEvaluator {
             return;
         }
 
-        Double thresholdObj = condition.getValue();
+        Double threshold = condition.getValue();
         String op = condition.getOperator();
-        if (thresholdObj == null || op == null) {
-            LOGGER.warn("Invalid threshold or operator: threshold={}, operator={}", thresholdObj, op);
+        if (threshold == null || op == null) {
+            LOGGER.warn("Invalid threshold or operator: threshold={}, operator={}", threshold, op);
             return;
         }
-
-        double threshold = thresholdObj;
 
         String storageName = managerClient.fetchStorageType();
         if (storageName == null) {
@@ -104,10 +100,10 @@ public class AlertEvaluator {
                         dp.getCount(), storageName, st.getCount(), diff, op, threshold);
 
                 switch (storageName) {
-                    case ConfigConstants.STORAGE_ICEBERG:
+                    case STORAGE_ICEBERG:
                         prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
                         break;
-                    case ConfigConstants.STORAGE_HIVE:
+                    case STORAGE_HIVE:
                         prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
                         break;
                     default:
