@@ -23,18 +23,21 @@ import java.util.Date;
 
 @Data
 public class AuditAlertRuleEntity {
+
     private Integer id;
     private String inlongGroupId;
     private String inlongStreamId;
     private String auditId;
     private String alertName;
-    private String condition;
+    private String condition; // Keep as String for database storage (JSON format)
     private String level;
     private String notifyType;
     private String receivers;
     private Boolean enabled;
+    private Integer isDeleted; // Use Integer to match database int(11) type
     private String creator;
     private String modifier;
     private Date createTime;
-    private Date updateTime;
+    private Date modifyTime; // Modify time
+    private Integer version; // Add version field
 }

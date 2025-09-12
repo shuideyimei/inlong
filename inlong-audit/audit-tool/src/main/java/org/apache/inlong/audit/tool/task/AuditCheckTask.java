@@ -1,12 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.task;
 
-import lombok.Getter;
-import org.apache.inlong.audit.tool.config.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
+import org.apache.inlong.audit.tool.DTO.AuditData;
+import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.basemetric.BaseMetricReporter;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
-import org.apache.inlong.audit.tool.DTO.AuditData;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+import org.apache.inlong.audit.tool.service.AuditMetricService;
+
+import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -14,9 +37,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 审计检查任务类，定期获取审计数据并评估告警
+ * AuditCheckTask class: Periodically fetches audit data and evaluates alert policies.
  */
 public class AuditCheckTask {
+
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final AlertEvaluator alertEvaluator;
     @Getter
@@ -24,49 +48,106 @@ public class AuditCheckTask {
     @Getter
     private OpenTelemetryReporter openTelemetryReporter;
     private final ManagerClient managerClient;
-    
-    public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient, AlertEvaluator alertEvaluator) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManagerClient.class);
+    private final BaseMetricReporter baseMetricReporter;
+    private final AuditMetricService auditMetricService;
+
+    public AuditCheckTask(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+            ManagerClient managerClient, AlertEvaluator alertEvaluator) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
         this.alertEvaluator = alertEvaluator;
+        this.baseMetricReporter =new BaseMetricReporter(prometheusReporter.getRegistry());
+        this.auditMetricService = new AuditMetricService();
     }
 
     /**
-     * 启动审计检查任务
+     * Initiate the audit inspection task
      */
     public void start() {
         scheduler.scheduleAtFixedRate(this::checkAuditData, 0, 30, TimeUnit.SECONDS);
     }
-    
+
     /**
-     * 检查审计数据并触发告警评估
+     * Check audit data and trigger alert evaluation.
      */
     private void checkAuditData() {
+        final long startTime = System.currentTimeMillis();
+        final long timeoutMillis = 10  * 1000; // 10 minutes timeout
+        int attempt = 0;
+        boolean success = false;
+
+        //Report basic indicator data
         try {
-            // 获取审计数据
-            List<AuditData> auditDataList = managerClient.fetchAuditData();
-            
-            // 获取告警策略
-            List<AlertPolicy> policies = managerClient.fetchAlertPolicies();
-            
-            // 对每个审计数据和每个策略进行评估
-            for (AuditData auditData : auditDataList) {
-                for (AlertPolicy policy : policies) {
-                    if (alertEvaluator.shouldTriggerAlert(auditData, policy)) {
-                        alertEvaluator.triggerAlert(auditData, policy);
+            baseMetricReporter.reportBaseMetric();
+        }catch (Exception e){
+            LOGGER.error("An exception occurred during the process of reporting basic indicator data!"+e.getMessage());
+        }
+
+        while (!success && (System.currentTimeMillis() - startTime) < timeoutMillis) {
+            attempt++;
+            try {
+                LOGGER.info("Attempt #{} to check audit data", attempt);
+
+                // Get audit data
+                List<AuditData> auditDataList = managerClient.fetchAuditData();
+
+                // Get alert policies
+                List<AuditAlertRule> alertRules = managerClient.fetchAlertRules();
+
+                // 获取dataProxy指标
+                List<AuditMetricVo> dataProxyMetrics = auditMetricService.getDataproxyAuditMetrics();
+                
+
+                // Evaluate each audit data against each policy
+                for (AuditData auditData : auditDataList) {
+                    for (AuditAlertRule alertRule : alertRules) {
+                        List<String> auditIds = List.of(alertRule.getAuditId());
+                        List<AuditMetricVo> hiveMetrics = auditMetricService.getHiveAuditMetrics(auditIds);
+                        List<AuditMetricVo> icebergMetrics = auditMetricService.getIcebergAuditMetrics(auditIds);
+                        
+                        if (alertEvaluator.shouldTriggerAlert(dataProxyMetrics, hiveMetrics, alertRule) ||
+                            alertEvaluator.shouldTriggerAlert(dataProxyMetrics, icebergMetrics, alertRule)) {
+                            alertEvaluator.triggerAlert(auditData, alertRule);
+                        }
                     }
                 }
+
+                // Successfully completed, exit loop
+                success = true;
+                LOGGER.info("Successfully checked audit data on attempt #{}", attempt);
+
+            } catch (Exception e) {
+                // Log error but continue retrying
+                LOGGER.error("Error occurred on attempt #{}: {}", attempt, e.getMessage());
+                LOGGER.debug("Error details", e);
+
+                // Check if timeout reached
+                if ((System.currentTimeMillis() - startTime) >= timeoutMillis) {
+                    LOGGER.error("Timeout reached after {} minutes. Terminating thread.", 10);
+                    break;
+                }
+
+                // Wait 3 seconds before retrying
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    LOGGER.warn("Thread interrupted during retry wait");
+                    break;
+                }
             }
-        } catch (Exception e) {
-            scheduler.shutdownNow();
-            Thread.currentThread().interrupt();
-            System.out.println("Error occurred while checking audit data: " + e.getMessage());
+        }
+
+        if (!success) {
+            LOGGER.error("Failed to check audit data after {} attempts and {} minutes. Terminating thread.",
+                    attempt, 10);
         }
     }
-    
+
     /**
-     * 停止审计检查任务
+     * Stop the audit inspection task
      */
     public void stop() {
         scheduler.shutdown();

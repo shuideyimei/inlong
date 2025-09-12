@@ -1,20 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.audit.tool.evaluator;
 
-import lombok.Getter;
-import org.apache.inlong.audit.tool.config.AlertPolicy;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
+import org.apache.inlong.audit.tool.DTO.AlertPolicy;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.DTO.MetricData;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+import  org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
+import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
+import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AlertEvaluator {
-    @Getter
+
     private final PrometheusReporter prometheusReporter;
-    @Getter
     private final OpenTelemetryReporter openTelemetryReporter;
     @Getter
     private final ManagerClient managerClient;
@@ -23,7 +44,8 @@ public class AlertEvaluator {
     @Getter
     private AlertPolicy alertpolicy;
 
-    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter, ManagerClient managerClient) {
+    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+            ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
         this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
@@ -35,9 +57,10 @@ public class AlertEvaluator {
                 auditData.getReceivedCount());
     }
 
-    public List<String> getEnabledPlatforms(AlertPolicy alertPolicy) {
+    public List<String> getEnabledPlatforms(AuditAlertRule alertRule) {
         List<String> enabledPlatforms = new ArrayList<>();
-        List<String> targets = alertPolicy.getTargets();
+        //先写死成promethus
+        List<String> targets = Collections.singletonList("promethus");
         if (targets != null) {
             for (String target : targets) {
                 switch (target.toLowerCase()) {
@@ -56,40 +79,49 @@ public class AlertEvaluator {
         return enabledPlatforms;
     }
 
-    public boolean shouldTriggerAlert(AuditData auditData, AlertPolicy alertPolicy) {
-        this.auditData = auditData;
-        this.alertpolicy = alertPolicy;
-        // 实现具体的告警判断逻辑
-        double dataLossRate = auditData.getDataLossRate();
-
-        // 获取阈值
-        double threshold = alertPolicy.getThreshold();
-        String comparisonOperator = alertPolicy.getComparisonOperator();
-
-        // 根据比较操作符判断是否触发告警
-        switch (comparisonOperator) {
-            case ">":
-                return dataLossRate > threshold;
-            case ">=":
-                return dataLossRate >= threshold;
-            case "<":
-                return dataLossRate < threshold;
-            case "<=":
-                return dataLossRate <= threshold;
-            case "==":
-                return dataLossRate == threshold;
-            case "!=":
-                return dataLossRate != threshold;
-            default:
-                return false;
-        }
+    public boolean shouldTriggerAlert(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, AuditAlertRule alertRule) {
+        return checkDataProxyWithStorage(dataProxyMetrics, storageMetrics, alertRule);
     }
 
-    public void triggerAlert(AuditData auditData, AlertPolicy policy) {
-        List<String> enabledPlatforms = getEnabledPlatforms(policy);
+    private boolean checkDataProxyWithStorage(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, 
+                                         AuditAlertRule alertRule) {
+        if (dataProxyMetrics != null && storageMetrics != null) {
+            AuditAlertCondition condition = alertRule.getCondition();
+            double threshold = condition.getValue();
+            
+            for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
+                for (AuditMetricVo storageMetric : storageMetrics) {
+                    if (dataProxyMetric.getInlongGroupId().equals(storageMetric.getInlongGroupId()) &&
+                        dataProxyMetric.getInlongStreamId().equals(storageMetric.getInlongStreamId())) {
+                        long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
+                        switch (condition.getOperator()) {
+                            case ">":
+                                return countDifference > threshold;
+                            case ">=":
+                                return countDifference >= threshold;
+                            case "<":
+                                return countDifference < threshold;
+                            case "<=":
+                                return countDifference <= threshold;
+                            case "==":
+                                return countDifference == threshold;
+                            case "!=":
+                                return countDifference != threshold;
+                            default:
+                                return false;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public void triggerAlert(AuditData auditData, AuditAlertRule alertRule) {
+        List<String> enabledPlatforms = getEnabledPlatforms(alertRule);
         MetricData metricData = calculateMetricData(auditData);
         if (metricData.getAlertInfo() == null) {
-            metricData.setAlertInfo(new MetricData.AlertInfo(policy.getAlertType()));
+            metricData.setAlertInfo(new MetricData.AlertInfo(alertRule.getAlertName()));
         }
 
         for (String platform : enabledPlatforms) {

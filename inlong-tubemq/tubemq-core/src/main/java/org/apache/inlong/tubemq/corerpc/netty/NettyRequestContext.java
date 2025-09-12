@@ -17,7 +17,6 @@
 
 package org.apache.inlong.tubemq.corerpc.netty;
 
-import org.apache.inlong.tubemq.corebase.protobuf.generated.RPCProtos;
 import org.apache.inlong.tubemq.corerpc.RequestWrapper;
 import org.apache.inlong.tubemq.corerpc.ResponseWrapper;
 import org.apache.inlong.tubemq.corerpc.RpcDataPack;
