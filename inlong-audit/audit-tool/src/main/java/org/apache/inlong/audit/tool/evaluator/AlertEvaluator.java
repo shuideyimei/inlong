@@ -20,23 +20,18 @@ package org.apache.inlong.audit.tool.evaluator;
 import org.apache.inlong.audit.tool.DTO.AlertPolicy;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditData;
-import org.apache.inlong.audit.tool.DTO.MetricData;
 import  org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
-import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AlertEvaluator {
 
     private final PrometheusReporter prometheusReporter;
-    private final OpenTelemetryReporter openTelemetryReporter;
     @Getter
     private final ManagerClient managerClient;
     @Getter
@@ -44,112 +39,76 @@ public class AlertEvaluator {
     @Getter
     private AlertPolicy alertpolicy;
 
-    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+    public AlertEvaluator(PrometheusReporter prometheusReporter,
             ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
-        this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
     }
+    public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
+                                                  List<AuditMetricVo> storageMetrics,
+                                                  AuditAlertRule alertRule,
+                                                  String storageName) {
+        if (dataProxyMetrics == null || storageMetrics == null) {
+            return;
+        }
 
-    public List<String> getEnabledPlatforms(AuditAlertRule alertRule) {
-        List<String> enabledPlatforms = new ArrayList<>();
-        //先写死成promethus
-        List<String> targets = Collections.singletonList("promethus");
-        if (targets != null) {
-            for (String target : targets) {
-                switch (target.toLowerCase()) {
-                    case "prometheus":
-                        enabledPlatforms.add("prometheus");
+        AuditAlertCondition condition = alertRule.getCondition();
+        double threshold = condition.getValue();
+        String op = condition.getOperator();
+
+        for (AuditMetricVo dp : dataProxyMetrics) {
+            for (AuditMetricVo st : storageMetrics) {
+                if (!dp.getInlongGroupId().equals(st.getInlongGroupId()) ||
+                        !dp.getInlongStreamId().equals(st.getInlongStreamId())) {
+                    continue;
+                }
+
+                long diff = Math.abs(dp.getCount() - st.getCount());
+                boolean hit = false;
+
+                switch (op) {
+                    case ">":
+                        hit = diff > threshold;
                         break;
-                    case "opentelemetry":
-                        enabledPlatforms.add("opentelemetry");
+                    case ">=":
+                        hit = diff >= threshold;
+                        break;
+                    case "<":
+                        hit = diff < threshold;
+                        break;
+                    case "<=":
+                        hit = diff <= threshold;
+                        break;
+                    case "==":
+                        hit = diff == threshold;
+                        break;
+                    case "!=":
+                        hit = diff != threshold;
                         break;
                     default:
-                        System.out.println("Invalid platform");
-                        break;
+                        hit = false;
                 }
-            }
-        }
-        return enabledPlatforms;
-    }
 
-    public boolean shouldTriggerAlert(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, AuditAlertRule alertRule) {
-        return checkDataProxyWithStorage(dataProxyMetrics, storageMetrics, alertRule);
-    }
-
-    private boolean checkDataProxyWithStorage(List<AuditMetricVo> dataProxyMetrics, List<AuditMetricVo> storageMetrics, 
-                                         AuditAlertRule alertRule) {
-        if (dataProxyMetrics != null && storageMetrics != null) {
-            AuditAlertCondition condition = alertRule.getCondition();
-            double threshold = condition.getValue();
-            
-            for (AuditMetricVo dataProxyMetric : dataProxyMetrics) {
-                for (AuditMetricVo storageMetric : storageMetrics) {
-                    if (dataProxyMetric.getInlongGroupId().equals(storageMetric.getInlongGroupId()) &&
-                        dataProxyMetric.getInlongStreamId().equals(storageMetric.getInlongStreamId())) {
-                        long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
-                        switch (condition.getOperator()) {
-                            case ">":
-                                return countDifference > threshold;
-                            case ">=":
-                                return countDifference >= threshold;
-                            case "<":
-                                return countDifference < threshold;
-                            case "<=":
-                                return countDifference <= threshold;
-                            case "==":
-                                return countDifference == threshold;
-                            case "!=":
-                                return countDifference != threshold;
-                            default:
-                                return false;
-                        }
+                if (hit) {
+                    System.out.printf(
+                            "[ALERT] groupId=%s, streamId=%s | dataproxy=%d, %s=%d | diff=%d  %s threshold=%.0f%n",
+                            dp.getInlongGroupId(), dp.getInlongStreamId(),
+                            dp.getCount(), storageName, st.getCount(), diff, op, threshold
+                    );
+                    switch (storageName) {
+                        case "iceberg":
+                            prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
+                            break;
+                        case "hive":
+                            prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
+                            break;
+                        default:
+                            System.out.println("[ALERT] Unknown storage name: " + storageName);
+                            break;
                     }
                 }
             }
         }
-        return false;
-    }
-
-
-    public void triggerAlert(AuditMetricVo dataProxyMetric, AuditMetricVo storageMetric, 
-                             AuditAlertRule alertRule) {
-        List<String> enabledPlatforms = getEnabledPlatforms(alertRule);
-        
-        // 根据实际数据构造 MetricData
-        MetricData metricData = getMetricData(dataProxyMetric, storageMetric, alertRule);
-
-        for (String platform : enabledPlatforms) {
-            switch (platform.toLowerCase()) {
-                case "prometheus":
-                    prometheusReporter.report(metricData);
-                    break;
-                case "opentelemetry":
-                    openTelemetryReporter.report(metricData);
-                    break;
-                default:
-                    System.out.println("Invalid platform: " + platform);
-                    break;
-            }
-        }
-    }
-
-    private static MetricData getMetricData(AuditMetricVo dataProxyMetric, AuditMetricVo storageMetric, AuditAlertRule alertRule) {
-        long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
-        MetricData metricData = new MetricData(
-            dataProxyMetric.getInlongGroupId(),
-            dataProxyMetric.getInlongStreamId(),
-            0.0, // dataLossRate
-            countDifference, // dataLossCount
-            Math.min(dataProxyMetric.getCount(), storageMetric.getCount()), // auditCount
-            dataProxyMetric.getCount(), // expectedCount
-            storageMetric.getCount() // receivedCount
-        );
-
-        if (metricData.getAlertInfo() == null) {
-            metricData.setAlertInfo(new MetricData.AlertInfo(alertRule.getAlertName()));
-        }
-        return metricData;
     }
 
 }

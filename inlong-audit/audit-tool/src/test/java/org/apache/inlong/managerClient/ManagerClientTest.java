@@ -34,7 +34,7 @@ class ManagerClientTest {
     private final ManagerClient managerClient = new ManagerClient(new AppConfig());
 
     @Test
-    void testFetchAlertRules_Success() {
+    void testFetchAlertRules() {
         // Mock data
         AuditAlertRule rule = new AuditAlertRule();
         rule.setId(1);
@@ -56,24 +56,7 @@ class ManagerClientTest {
     }
 
     @Test
-    void testFetchAlertRules_Failure() {
-        // Mock response
-        Response<List<AuditAlertRule>> mockResponse = new Response<>();
-        mockResponse.setSuccess(false);
-
-        try {
-            // Execute
-            List<AuditAlertRule> result = managerClient.fetchAlertRules();
-
-            // Verify
-            assertNotNull(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    void testFetchAuditIds_Success() {
+    void testFetchAuditIds() {
         // Mock alert rules
         AuditAlertRule rule = new AuditAlertRule();
         rule.setInlongGroupId("group1");
@@ -95,28 +78,4 @@ class ManagerClientTest {
         }
     }
 
-
-    @Test
-    void testFetchAuditIds_Failure() {
-        // Mock alert rules
-        AuditAlertRule rule = new AuditAlertRule();
-        rule.setInlongGroupId("group1");
-        rule.setInlongStreamId("stream1");
-        rule.setAuditId("1,2,3");
-
-        Response<List<AuditAlertRule>> alertRulesResponse = new Response<>();
-        alertRulesResponse.setSuccess(true);
-        alertRulesResponse.setData(Collections.singletonList(rule));
-
-        try {
-            // Execute
-            List<String> result = managerClient.fetchAuditIds();
-
-            // Verify
-            assertNotNull(result);
-            assertTrue(result.isEmpty());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

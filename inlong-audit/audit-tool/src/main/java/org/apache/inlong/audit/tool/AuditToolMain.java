@@ -25,29 +25,28 @@ import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 
-public class AuditToolMain {
+import java.util.List;
 
-    private static final long DEFAULT_INTERVAL = 30000; // 30秒
+public class AuditToolMain {
     public static void main(String[] args) {
         // Load application configuration
         AppConfig appConfig = new AppConfig();
 
         // Initialize manager client
         ManagerClient managerClient = new ManagerClient(appConfig);
+        List<String> strings = managerClient.fetchAuditIds();
 
-        // Initialize alert evaluator
         // Initialize reporters
         PrometheusReporter prometheusReporter = new PrometheusReporter();
         prometheusReporter.init(appConfig.getPrometheusConfig());
-        OpenTelemetryReporter openTelemetryReporter = new OpenTelemetryReporter();
 
         //Database query initialization
         AuditSQLUtil.initialize(appConfig.getProperties());
 
-        // Schedule the audit check task
-        AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, openTelemetryReporter, managerClient);
+        // Initialize alert evaluator
+        AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, managerClient);
         AuditCheckTask auditCheckTask =
-                new AuditCheckTask(prometheusReporter, openTelemetryReporter, managerClient, alertEvaluator);
+                new AuditCheckTask(managerClient, alertEvaluator,appConfig);
         auditCheckTask.start();
 
         // Keep the application running
