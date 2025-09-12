@@ -59,7 +59,7 @@ public class ManagerClient {
         try {
             // Get the manager URL from app configuration
             String managerUrl = appConfig.getManagerUrl();
-            String path = "/audit/alert/rule/list";
+            String path = "/api/audit/alert/rule/list";
 
             // Ensure there is only one forward slash between the base URL and path
             String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
