@@ -18,17 +18,12 @@
 package org.apache.inlong.audit.tool.task;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.DTO.AuditData;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
-import org.apache.inlong.audit.tool.basemetric.BaseMetricReporter;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
-import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
 
-import lombok.Getter;
 import org.apache.inlong.audit.tool.util.AuditIdEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,10 +72,10 @@ public class AuditCheckTask {
     private void checkAuditData() {
         //获取接口提供的auditIds
         List<String> auditIds = managerClient.fetchAuditIds();
-        List<String> icbergAuditIds = new ArrayList<>();
+        List<String> icebergAuditIds = new ArrayList<>();
         List<String> hiveAuditIds = new ArrayList<>();
 
-        //将auditIds进行归类，分别归类为icberg和dataproxy的auditId
+        //将auditIds进行归类，分别归类为iceberg和dataproxy的auditId
         for (String auditId : auditIds) {
             int auditIdInt = Integer.parseInt(auditId);
 
@@ -91,13 +86,13 @@ public class AuditCheckTask {
                     auditIdInt == AuditIdEnum.SORT_ICEBERG_OUTPUT.getValue() ||
                     auditIdInt == AuditIdEnum.ICEBERG_AO_INPUT.getValue() ||
                     auditIdInt == AuditIdEnum.ICEBERG_AO_OUTPUT.getValue()) {
-                icbergAuditIds.add(auditId);
+                icebergAuditIds.add(auditId);
             }
         }
 
         //通过auditId去数据库查找相关数据
         List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
-        List<AuditMetricVo> icebergAuditMetrics = auditMetricService.getIcebergAuditMetrics(icbergAuditIds);
+        List<AuditMetricVo> icebergAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
         List<AuditMetricVo> hiveAuditMetrics = auditMetricService.getHiveAuditMetrics(hiveAuditIds);
 
         // 获取告警策略
