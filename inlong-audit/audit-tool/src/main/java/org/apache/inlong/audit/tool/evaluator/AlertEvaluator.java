@@ -36,7 +36,6 @@ import java.util.List;
 public class AlertEvaluator {
 
     private final PrometheusReporter prometheusReporter;
-    private final OpenTelemetryReporter openTelemetryReporter;
     @Getter
     private final ManagerClient managerClient;
     @Getter
@@ -44,10 +43,9 @@ public class AlertEvaluator {
     @Getter
     private AlertPolicy alertpolicy;
 
-    public AlertEvaluator(PrometheusReporter prometheusReporter, OpenTelemetryReporter openTelemetryReporter,
+    public AlertEvaluator(PrometheusReporter prometheusReporter,
             ManagerClient managerClient) {
         this.prometheusReporter = prometheusReporter;
-        this.openTelemetryReporter = openTelemetryReporter;
         this.managerClient = managerClient;
     }
 
@@ -96,6 +94,7 @@ public class AlertEvaluator {
                         long countDifference = Math.abs(dataProxyMetric.getCount() - storageMetric.getCount());
                         switch (condition.getOperator()) {
                             case ">":
+                                System.out.println("");
                                 return countDifference > threshold;
                             case ">=":
                                 return countDifference >= threshold;
@@ -129,12 +128,70 @@ public class AlertEvaluator {
                 case "prometheus":
                     prometheusReporter.report(metricData);
                     break;
-                case "opentelemetry":
-                    openTelemetryReporter.report(metricData);
-                    break;
                 default:
                     System.out.println("Invalid platform: " + platform);
                     break;
+            }
+        }
+    }
+
+    public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
+                                                  List<AuditMetricVo> storageMetrics,
+                                                  AuditAlertRule alertRule,
+                                                  String storageName) {
+        if (dataProxyMetrics == null || storageMetrics == null) {
+            return;
+        }
+
+        AuditAlertCondition condition = alertRule.getCondition();
+        double threshold = condition.getValue();
+        String op = condition.getOperator();
+
+        for (AuditMetricVo dp : dataProxyMetrics) {
+            for (AuditMetricVo st : storageMetrics) {
+                if (!dp.getInlongGroupId().equals(st.getInlongGroupId()) ||
+                        !dp.getInlongStreamId().equals(st.getInlongStreamId())) {
+                    continue;
+                }
+
+                long diff = Math.abs(dp.getCount() - st.getCount());
+                boolean hit = false;
+
+                switch (op) {
+                    case ">":
+                        hit = diff > threshold;
+                        break;
+                    case ">=":
+                        hit = diff >= threshold;
+                        break;
+                    case "<":
+                        hit = diff < threshold;
+                        break;
+                    case "<=":
+                        hit = diff <= threshold;
+                        break;
+                    case "==":
+                        hit = diff == threshold;
+                        break;
+                    case "!=":
+                        hit = diff != threshold;
+                        break;
+                    default:
+                        hit = false;
+                }
+
+                if (hit) {
+                    System.out.printf(
+                            "[ALERT] groupId=%s, streamId=%s | dataproxy=%d, %s=%d | diff=%d  %s thresold=%.0f%n",
+                            dp.getInlongGroupId(), dp.getInlongStreamId(),
+                            dp.getCount(), storageName, st.getCount(), diff, op, threshold
+                    );
+                    if("iceberg".equals(storageName)){
+                        prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
+                    }else if("hive".equals(storageName)){
+                        prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
+                    }
+                }
             }
         }
     }
