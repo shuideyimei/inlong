@@ -21,13 +21,13 @@ import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
-import org.apache.inlong.audit.tool.reporter.OpenTelemetryReporter;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 
 import java.util.List;
 
 public class AuditToolMain {
+
     public static void main(String[] args) {
         // Load application configuration
         AppConfig appConfig = new AppConfig();
@@ -40,13 +40,13 @@ public class AuditToolMain {
         PrometheusReporter prometheusReporter = new PrometheusReporter();
         prometheusReporter.init(appConfig.getPrometheusConfig());
 
-        //Database query initialization
+        // Database query initialization
         AuditSQLUtil.initialize(appConfig.getProperties());
 
         // Initialize alert evaluator
         AlertEvaluator alertEvaluator = new AlertEvaluator(prometheusReporter, managerClient);
         AuditCheckTask auditCheckTask =
-                new AuditCheckTask(managerClient, alertEvaluator,appConfig);
+                new AuditCheckTask(managerClient, alertEvaluator, appConfig);
         auditCheckTask.start();
 
         // Keep the application running

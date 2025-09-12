@@ -21,6 +21,7 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 
 public class AuditMetric {
+
     private final Gauge dataproxyWithIcbergAlert;
     private final Gauge dataproxyWithHiveAlert;
 

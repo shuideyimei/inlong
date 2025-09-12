@@ -21,6 +21,7 @@ import lombok.Data;
 
 @Data
 public class AuditMetricVo {
+
     private String inlongGroupId;
     private String inlongStreamId;
     private long count;

@@ -45,7 +45,8 @@ public class InlongApiMetricsManager {
     private void initMetrics() {
         apiReceiveSuccessNumGauge = Gauge.build()
                 .name("inlong_api_receive_num_interval")
-                .help("Number of messages received successfully by Inlong API in the last " + periodSeconds + " seconds")
+                .help("Number of messages received successfully by Inlong API in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         apiReceiveSuccessSizeGauge = Gauge.build()
@@ -55,7 +56,8 @@ public class InlongApiMetricsManager {
 
         apiReceiveSuccessAvgDelayGauge = Gauge.build()
                 .name("inlong_api_receive_avg_delay_interval")
-                .help("Average delay of messages received successfully by Inlong API in the last " + periodSeconds + " seconds")
+                .help("Average delay of messages received successfully by Inlong API in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         apiSendSuccessNumGauge = Gauge.build()
@@ -70,7 +72,8 @@ public class InlongApiMetricsManager {
 
         apiSendSuccessAvgDelayGauge = Gauge.build()
                 .name("inlong_api_send_avg_delay_interval")
-                .help("Average delay of messages sent successfully by Inlong API in the last " + periodSeconds + " seconds")
+                .help("Average delay of messages sent successfully by Inlong API in the last " + periodSeconds
+                        + " seconds")
                 .register(collectorRegistry);
 
         apiAbandonRateGauge = Gauge.build()

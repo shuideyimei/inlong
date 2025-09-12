@@ -17,11 +17,10 @@
 
 package org.apache.inlong.audit.tool.basemetric.vo;
 
-
-
 import java.sql.Timestamp;
 
 public class AuditDataVo {
+
     private String ip;
     private String dockerId;
     private String threadId;

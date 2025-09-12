@@ -22,8 +22,8 @@ import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.AuditAlertRulePageRequest;
 import org.apache.inlong.audit.tool.util.HttpUtils;
-
 import org.apache.inlong.audit.tool.util.PageResult;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -62,7 +62,8 @@ public class ManagerClient {
             String path = "/api/audit/alert/rule/list";
 
             // Ensure there is only one forward slash between the base URL and path
-            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
+            String url =
+                    (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + path;
 
             LOGGER.info("begin query audit alertRule list");
 
