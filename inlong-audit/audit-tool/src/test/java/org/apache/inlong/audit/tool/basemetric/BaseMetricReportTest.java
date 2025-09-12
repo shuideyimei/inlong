@@ -17,15 +17,17 @@
 
 package org.apache.inlong.audit.tool.basemetric;
 
-import io.prometheus.client.CollectorRegistry;
 import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
+import io.prometheus.client.CollectorRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
 public class BaseMetricReportTest {
+
     /**
      * Unit testing method for reporting basic indicator data to Prometheus
      * @throws InterruptedException
@@ -39,7 +41,8 @@ public class BaseMetricReportTest {
 
         // If you want to test real data, set useFakeData to false
         // If you want to use simulated fake data, set userFakeData to true
-        Boolean useFakeData =Boolean.parseBoolean( appConfig.getProperties().getProperty("audit.data.use.fake.data","true"));
+        Boolean useFakeData =
+                Boolean.parseBoolean(appConfig.getProperties().getProperty("audit.data.use.fake.data", "true"));
         prometheusReporter.init(prometheusConfig);
 
         // Retrieve index registry reference

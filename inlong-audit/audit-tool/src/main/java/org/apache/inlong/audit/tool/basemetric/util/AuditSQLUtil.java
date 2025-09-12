@@ -17,15 +17,17 @@
 
 package org.apache.inlong.audit.tool.basemetric.util;
 
+import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.ibatis.datasource.pooled.PooledDataSource;
 
 import javax.sql.DataSource;
+
 import java.util.Properties;
 
 public class AuditSQLUtil {
+
     private static SqlSessionFactory sqlSessionFactory;
     private static Properties appProperties;
 
@@ -40,8 +42,7 @@ public class AuditSQLUtil {
             configuration.setEnvironment(new org.apache.ibatis.mapping.Environment(
                     "development",
                     new org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory(),
-                    dataSource
-            ));
+                    dataSource));
 
             configuration.addMapper(org.apache.inlong.audit.tool.basemetric.mapper.AuditMapper.class);
 

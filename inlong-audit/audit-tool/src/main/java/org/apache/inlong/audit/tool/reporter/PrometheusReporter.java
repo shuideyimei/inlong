@@ -18,11 +18,11 @@
 package org.apache.inlong.audit.tool.reporter;
 
 import org.apache.inlong.audit.tool.DTO.MetricData;
+import org.apache.inlong.audit.tool.basemetric.AuditMetric;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.exporter.HTTPServer;
-import org.apache.inlong.audit.tool.basemetric.AuditMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ public class PrometheusReporter implements MetricReporter {
      */
     public PrometheusReporter() {
         this.registry = new CollectorRegistry();
-        auditMetric=new AuditMetric(registry);
+        auditMetric = new AuditMetric(registry);
     }
 
     /**
@@ -157,7 +157,7 @@ public class PrometheusReporter implements MetricReporter {
         }
     }
 
-    public CollectorRegistry getRegistry(){
+    public CollectorRegistry getRegistry() {
         return this.registry;
     }
 

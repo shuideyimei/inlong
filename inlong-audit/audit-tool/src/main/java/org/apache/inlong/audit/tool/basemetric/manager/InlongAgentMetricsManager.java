@@ -44,20 +44,37 @@ public class InlongAgentMetricsManager {
     }
 
     private void initMetrics() {
-        agentReceiveSuccessNumGauge = Gauge.build().name("inlong_agent_receive_num_interval").help("Number of messages received successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentReceiveSuccessNumGauge = Gauge.build().name("inlong_agent_receive_num_interval").help(
+                "Number of messages received successfully by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
 
-        agentReceiveSuccessSizeGauge = Gauge.build().name("inlong_agent_receive_size_interval").help("Size of messages received successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentReceiveSuccessSizeGauge = Gauge.build().name("inlong_agent_receive_size_interval").help(
+                "Size of messages received successfully by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
 
-        agentReceiveSuccessAvgDelayGauge = Gauge.build().name("inlong_agent_receive_avg_delay_interval").help("Average delay of messages received successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentReceiveSuccessAvgDelayGauge = Gauge.build().name("inlong_agent_receive_avg_delay_interval")
+                .help("Average delay of messages received successfully by Inlong Agent in the last " + periodSeconds
+                        + " seconds")
+                .register(collectorRegistry);
 
-        agentSendSuccessNumGauge = Gauge.build().name("inlong_agent_send_num_interval").help("Number of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentSendSuccessNumGauge = Gauge.build().name("inlong_agent_send_num_interval")
+                .help("Number of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
 
-        agentSendSuccessSizeGauge = Gauge.build().name("inlong_agent_send_size_interval").help("Size of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentSendSuccessSizeGauge = Gauge.build().name("inlong_agent_send_size_interval")
+                .help("Size of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
 
-        agentSendSuccessAvgDelayGauge = Gauge.build().name("inlong_agent_send_avg_delay_interval").help("Average delay of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentSendSuccessAvgDelayGauge = Gauge.build().name("inlong_agent_send_avg_delay_interval").help(
+                "Average delay of messages sent successfully by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
 
-        agentAbandonRateGauge = Gauge.build().name("inlong_agent_abandon_rate_interval").help("Abandon rate of messages by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
-        agentLossRateGauge = Gauge.build().name("inlong_agent_loss_rate_interval").help("Loss rate of messages by Inlong Agent in the last " + periodSeconds + " seconds").register(collectorRegistry);
+        agentAbandonRateGauge = Gauge.build().name("inlong_agent_abandon_rate_interval")
+                .help("Abandon rate of messages by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
+        agentLossRateGauge = Gauge.build().name("inlong_agent_loss_rate_interval")
+                .help("Loss rate of messages by Inlong Agent in the last " + periodSeconds + " seconds")
+                .register(collectorRegistry);
     }
     public void updateReceiveSuccessNum(long num) {
         agentReceiveSuccessNumGauge.set(num);

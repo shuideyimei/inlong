@@ -17,8 +17,8 @@
 
 package org.apache.inlong.audit.tool.evaluator;
 
-import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
+import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
@@ -38,9 +38,9 @@ public class AlertEvaluator {
         this.managerClient = managerClient;
     }
     public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
-                                                  List<AuditMetricVo> storageMetrics,
-                                                  AuditAlertRule alertRule,
-                                                  String storageName) {
+            List<AuditMetricVo> storageMetrics,
+            AuditAlertRule alertRule,
+            String storageName) {
         if (dataProxyMetrics == null || storageMetrics == null) {
             return;
         }
@@ -86,8 +86,7 @@ public class AlertEvaluator {
                     System.out.printf(
                             "[ALERT] groupId=%s, streamId=%s | dataproxy=%d, %s=%d | diff=%d  %s threshold=%.0f%n",
                             dp.getInlongGroupId(), dp.getInlongStreamId(),
-                            dp.getCount(), storageName, st.getCount(), diff, op, threshold
-                    );
+                            dp.getCount(), storageName, st.getCount(), diff, op, threshold);
                     switch (storageName) {
                         case "iceberg":
                             prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
