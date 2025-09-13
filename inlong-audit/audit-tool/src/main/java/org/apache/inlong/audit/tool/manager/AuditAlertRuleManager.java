@@ -66,7 +66,7 @@ public class AuditAlertRuleManager {
      *
      * @param appConfig non-null configuration
      */
-    public void init(AppConfig appConfig) {
+    public synchronized void init(AppConfig appConfig) {
         if (this.appConfig != null) {
             LOGGER.warn("AuditAlertRuleManager already initialized. Ignoring re-initialization");
             return;
@@ -106,7 +106,7 @@ public class AuditAlertRuleManager {
      * Schedules periodic fetching of rules at a fixed rate.
      * If the configured interval is <= 0, runs immediately once and returns.
      */
-    public void schedule() {
+    public synchronized void schedule() {
         int executionIntervalTime = Integer.parseInt(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
         if (executionIntervalTime < 0) {
             LOGGER.warn("Execution Interval Time {} is in the past. Executing immediately", executionIntervalTime);
@@ -154,8 +154,12 @@ public class AuditAlertRuleManager {
             LOGGER.info("success to query audit info for url ={}", url);
 
             // Copy and return the list of audit alert rules
-            auditAlertRuleList = result.getData().getList();
-            return auditAlertRuleList;
+            if(result.isSuccess()) {
+                auditAlertRuleList = result.getData().getList();
+                return auditAlertRuleList;
+            }else{
+                LOGGER.error("fetchAlertPolicies fail:{}", result.getErrMsg());
+            }
         } catch (Exception e) {
             LOGGER.error("fetchAlertPolicies fail: ", e);
         }

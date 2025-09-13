@@ -4,7 +4,7 @@ import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
+import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.metric.AuditMetric;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ public class AlertEvaluatorTest {
     private PrometheusReporter prometheusReporter;
 
     @Mock
-    private ManagerClient managerClient;
+    private AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
 
     @Mock
     private AuditMetric auditMetric;
@@ -39,13 +39,13 @@ public class AlertEvaluatorTest {
         when(prometheusReporter.getAuditMetric()).thenReturn(auditMetric);
 
         // Create the AlertEvaluator instance
-        alertEvaluator = new AlertEvaluator(prometheusReporter, managerClient);
+        alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
     }
 
     @Test
     public void testConstructor() {
         assertNotNull(alertEvaluator);
-        assertEquals(managerClient, alertEvaluator.getManagerClient());
+        assertEquals(auditAlertRuleManager, alertEvaluator.getAuditAlertRuleManager());
     }
 
     @Test
@@ -101,7 +101,7 @@ public class AlertEvaluatorTest {
     @Test
     public void testEvaluateAndReportWithNullStorageName() {
         // Mock managerClient to return null storage type
-        when(managerClient.fetchStorageType()).thenReturn(null);
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn(null);
 
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setValue(10.0);
@@ -112,13 +112,13 @@ public class AlertEvaluatorTest {
 
         alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
         // Should not throw any exception
-        verify(managerClient, times(1)).fetchStorageType();
+        verify(auditAlertRuleManager, times(1)).fetchStorageType();
     }
 
     @Test
     public void testEvaluateAndReportWithEmptyMetrics() {
         // Mock managerClient to return a valid storage type
-        when(managerClient.fetchStorageType()).thenReturn("iceberg");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
 
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setValue(10.0);
@@ -129,13 +129,13 @@ public class AlertEvaluatorTest {
 
         alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
         // Should not throw any exception
-        verify(managerClient, times(1)).fetchStorageType();
+        verify(auditAlertRuleManager, times(1)).fetchStorageType();
     }
 
     @Test
     public void testEvaluateAndReportWithValidDataNoAlert() {
         // Mock managerClient to return a valid storage type
-        when(managerClient.fetchStorageType()).thenReturn("iceberg");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
 
         // Create test data with no alert condition match
         AuditMetricVo dataproxyMetric = new AuditMetricVo();
@@ -171,7 +171,7 @@ public class AlertEvaluatorTest {
     @Test
     public void testEvaluateAndReportWithValidDataAlertTriggeredIceberg() {
         // Mock managerClient to return iceberg storage type
-        when(managerClient.fetchStorageType()).thenReturn("iceberg");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
 
         // Create test data with alert condition match
         AuditMetricVo dataproxyMetric = new AuditMetricVo();
@@ -207,7 +207,7 @@ public class AlertEvaluatorTest {
     @Test
     public void testEvaluateAndReportWithValidDataAlertTriggeredHive() {
         // Mock managerClient to return hive storage type
-        when(managerClient.fetchStorageType()).thenReturn("hive");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("hive");
 
         // Create test data with alert condition match
         AuditMetricVo dataproxyMetric = new AuditMetricVo();
@@ -243,7 +243,7 @@ public class AlertEvaluatorTest {
     @Test
     public void testEvaluateAndReportWithUnknownStorageType() {
         // Mock managerClient to return unknown storage type
-        when(managerClient.fetchStorageType()).thenReturn("unknown");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("unknown");
 
         // Create test data with alert condition match
         AuditMetricVo dataproxyMetric = new AuditMetricVo();
@@ -314,7 +314,7 @@ public class AlertEvaluatorTest {
         // and checking if alerts are triggered appropriately
 
         // Mock managerClient to return iceberg storage type
-        when(managerClient.fetchStorageType()).thenReturn("iceberg");
+        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
 
         // Create test data
         AuditMetricVo dataproxyMetric = new AuditMetricVo();

@@ -2,7 +2,7 @@ package org.apache.inlong.task;
 
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
-import org.apache.inlong.audit.tool.manager.ManagerClient;
+import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 public class AuditCheckTaskTest {
 
     @Mock
-    private ManagerClient managerClient;
+    private AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
 
     @Mock
     private AlertEvaluator alertEvaluator;
@@ -41,7 +41,7 @@ public class AuditCheckTaskTest {
         when(properties.getProperty("audit.data.time.interval.minute")).thenReturn("5");
 
         // Create AuditCheckTask instance
-        auditCheckTask = new AuditCheckTask(managerClient, alertEvaluator, appConfig);
+        auditCheckTask = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class AuditCheckTaskTest {
     @Test
     public void testConstructorWithNullAppConfig() {
         // Test constructor with null AppConfig
-        AuditCheckTask task = new AuditCheckTask(managerClient, alertEvaluator, null);
+        AuditCheckTask task = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, null);
         assertNotNull(task);
     }
 
@@ -95,7 +95,7 @@ public class AuditCheckTaskTest {
     public void testConstructorWithNullProperties() {
         // Test constructor with null properties
         when(appConfig.getProperties()).thenReturn(null);
-        AuditCheckTask task = new AuditCheckTask(managerClient, alertEvaluator, appConfig);
+        AuditCheckTask task = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
         assertNotNull(task);
     }
 
@@ -103,7 +103,7 @@ public class AuditCheckTaskTest {
     public void testConstructorWithInvalidInterval() {
         // Test constructor with invalid interval value
         when(properties.getProperty("audit.data.time.interval.minute")).thenReturn("invalid");
-        AuditCheckTask task = new AuditCheckTask(managerClient, alertEvaluator, appConfig);
+        AuditCheckTask task = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
         assertNotNull(task);
     }
 
@@ -111,7 +111,7 @@ public class AuditCheckTaskTest {
     public void testConstructorWithEmptyInterval() {
         // Test constructor with empty interval value
         when(properties.getProperty("audit.data.time.interval.minute")).thenReturn("");
-        AuditCheckTask task = new AuditCheckTask(managerClient, alertEvaluator, appConfig);
+        AuditCheckTask task = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
         assertNotNull(task);
     }
 }

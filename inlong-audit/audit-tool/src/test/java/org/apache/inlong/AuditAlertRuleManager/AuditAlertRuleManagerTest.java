@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.managerClient;
+package org.apache.inlong.AuditAlertRuleManager;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.config.AppConfig;
