@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
  * Test cases for Audit Alert Rule functionality.
  */
 @ExtendWith(MockitoExtension.class)
-public class AuditAlertRuleTest {
+public class AuditAlertRuleServiceTest {
 
     @Mock
     private AuditAlertRuleService auditAlertRuleService;
@@ -59,7 +59,7 @@ public class AuditAlertRuleTest {
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setType("count");
         condition.setOperator(">");
-        condition.setValue(10000);
+        condition.setValue(10000.0);
         sampleRule.setCondition(condition);
         sampleRule.setLevel("WARN");
         sampleRule.setNotifyType(NotifyType.EMAIL);
@@ -133,7 +133,7 @@ public class AuditAlertRuleTest {
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setType("count");
         condition.setOperator(">");
-        condition.setValue(10000);
+        condition.setValue(10000.0);
         request.setCondition(condition);
         request.setLevel("WARN");
         request.setNotifyType(NotifyType.EMAIL);
@@ -174,15 +174,11 @@ public class AuditAlertRuleTest {
         updatedRule.setEnabled(false);
         updatedRule.setVersion(2); // Increment version
         when(auditAlertRuleService.update(any(AuditAlertRuleRequest.class), eq("test_user")))
-                .thenReturn(updatedRule);
+                .thenReturn(true);
 
-        AuditAlertRule updated = auditAlertRuleService.update(updateRequest, "test_user");
+        Boolean updated = auditAlertRuleService.update(updateRequest, "test_user");
         assertNotNull(updated);
-        assertEquals("ERROR", updated.getLevel());
-        assertEquals(NotifyType.SMS, updated.getNotifyType());
-        assertEquals("updated@example.com", updated.getReceivers());
-        assertFalse(updated.getEnabled());
-        assertEquals(2, updated.getVersion().intValue()); // Verify version is incremented
+        assertTrue(updated);
     }
 
     @Test
@@ -257,7 +253,7 @@ public class AuditAlertRuleTest {
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setType("count");
         condition.setOperator(">");
-        condition.setValue(5000);
+        condition.setValue(5000.0);
         request.setCondition(condition);
 
         // Mock behavior for validation error
@@ -290,13 +286,13 @@ public class AuditAlertRuleTest {
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setType("data_loss");
         condition.setOperator(">");
-        condition.setValue(1000);
+        condition.setValue(1000.0);
         rule.setCondition(condition);
         rule.setLevel("WARN");
         rule.setNotifyType(NotifyType.EMAIL);
         rule.setReceivers("admin@example.com");
         rule.setEnabled(true);
-        rule.setIsDeleted(0); // Set isDeleted to 0
+        rule.setIsDeleted(0);
         return rule;
     }
 }

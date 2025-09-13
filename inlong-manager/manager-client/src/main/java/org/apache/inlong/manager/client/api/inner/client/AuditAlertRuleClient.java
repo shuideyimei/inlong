@@ -90,12 +90,12 @@ public class AuditAlertRuleClient {
      * Update an audit alert rule
      *
      * @param rule The audit alert rule to update
-     * @return The updated audit alert rule
+     * @return True if update is successful, false otherwise
      */
-    public AuditAlertRule update(AuditAlertRule rule) {
+    public Boolean update(AuditAlertRuleRequest rule) {
         Preconditions.expectNotNull(rule, "audit alert rule cannot be null");
         Preconditions.expectNotNull(rule.getId(), "rule id cannot be null");
-        Response<AuditAlertRule> response = ClientUtils.executeHttpCall(auditAlertRuleApi.update(rule));
+        Response<Boolean> response = ClientUtils.executeHttpCall(auditAlertRuleApi.update(rule));
         ClientUtils.assertRespSuccess(response);
         return response.getData();
     }

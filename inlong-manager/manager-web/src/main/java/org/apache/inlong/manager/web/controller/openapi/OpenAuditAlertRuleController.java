@@ -46,9 +46,9 @@ import javax.validation.Valid;
  * Audit alert rule controller.
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/openapi")
 @Api(tags = "Audit-Alert-Rule-API")
-public class AuditAlertRuleController {
+public class OpenAuditAlertRuleController {
 
     @Lazy
     @Autowired
