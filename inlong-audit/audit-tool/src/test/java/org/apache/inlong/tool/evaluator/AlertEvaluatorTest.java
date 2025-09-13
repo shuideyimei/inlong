@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.evaluator;
+package org.apache.inlong.tool.evaluator;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
@@ -57,15 +57,13 @@ class AlertEvaluatorTest {
 
         alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
 
-        // 重定向System.out到ByteArrayOutputStream
+        // Redirect System.out to a ByteArrayOutputStream.
         System.setOut(new PrintStream(outContent));
     }
 
     @AfterEach
     void restoreStreams() {
-        // 恢复System.out
         System.setOut(originalOut);
-        // 清空输出内容
         outContent.reset();
     }
 

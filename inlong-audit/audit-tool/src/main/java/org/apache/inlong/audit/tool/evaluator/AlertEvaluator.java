@@ -24,6 +24,8 @@ import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +33,7 @@ import java.util.Objects;
 public class AlertEvaluator {
 
     private final PrometheusReporter prometheusReporter;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditAlertRuleManager.class);
     @Getter
     private final AuditAlertRuleManager auditAlertRuleManager;
     public AlertEvaluator(PrometheusReporter prometheusReporter,
@@ -83,7 +86,7 @@ public class AlertEvaluator {
                 }
 
                 if (hit) {
-                    System.out.printf(
+                    LOGGER.error(
                             "[ALERT] groupId=%s, streamId=%s | sourceCount=%d, sinkCount=%d | diff=%d  %s threshold=%.0f%n",
                             dp.getInlongGroupId(), dp.getInlongStreamId(),
                             dp.getCount(), st.getCount(), diff, op, threshold);

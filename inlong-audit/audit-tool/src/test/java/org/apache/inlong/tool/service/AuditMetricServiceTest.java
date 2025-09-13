@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.service;
+package org.apache.inlong.tool.service;
 
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.config.AppConfig;
+import org.apache.inlong.audit.tool.service.AuditMetricService;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
 import org.junit.jupiter.api.Test;

@@ -24,7 +24,12 @@ import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.task.AuditCheckTask;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AuditToolMain {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditAlertRuleManager.class);
 
     public static void main(String[] args) {
         // Load application configuration
@@ -51,9 +56,9 @@ public class AuditToolMain {
         // Keep the application running
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             auditCheckTask.stop();
-            System.out.println("Audit Tool stopped.");
+            LOGGER.error("Audit Tool stopped.");
         }));
 
-        System.out.println("Audit Tool started.");
+        LOGGER.error("Audit Tool started.");
     }
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.task;
+package org.apache.inlong.tool.task;
 
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
