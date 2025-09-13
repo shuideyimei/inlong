@@ -25,6 +25,7 @@ import org.apache.inlong.audit.tool.util.HttpUtil;
 import org.apache.inlong.audit.tool.util.PageResult;
 import org.apache.inlong.audit.utils.HttpUtils;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -35,9 +36,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -53,8 +54,8 @@ public class AuditAlertRuleManager {
     private AppConfig appConfig;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditAlertRuleManager.class);
     private final RestTemplate restTemplate = new RestTemplate();
-    private List<AuditAlertRule> auditAlertRuleList = new ArrayList<>();
-    private List<String> auditIds = new ArrayList<>();
+    @Getter
+    private List<AuditAlertRule> auditAlertRuleList = new CopyOnWriteArrayList<>();
 
     private static class Holder {
 
@@ -100,9 +101,11 @@ public class AuditAlertRuleManager {
     private void runFetchTaskSafe() {
         try {
             LOGGER.info("Running scheduled fetch task...");
-            List<AuditAlertRule> rules = fetchAlertRules();
-            List<String> ids = fetchAuditIds();
-            LOGGER.info("Scheduled fetch task completed. rules={}, ids={}", rules.size(), ids.size());
+            List<AuditAlertRule> rules = fetchAlertRulesFromManager();
+            if (!rules.isEmpty()) {
+                auditAlertRuleList = rules;
+            }
+            LOGGER.info("Scheduled fetch task completed. rules={}", rules.size());
         } catch (Exception e) {
             LOGGER.error("Error during scheduled fetch task", e);
         }
@@ -133,7 +136,7 @@ public class AuditAlertRuleManager {
      *
      * @return A list of {@link AuditAlertRule} objects if successful, or null if the request fails.
      */
-    public List<AuditAlertRule> fetchAlertRules() {
+    public List<AuditAlertRule> fetchAlertRulesFromManager() {
         try {
             // Get the manager URL from app configuration
             String managerUrl = appConfig.getManagerUrl();
@@ -162,8 +165,9 @@ public class AuditAlertRuleManager {
 
             // Copy and return the list of audit alert rules
             if (result.isSuccess()) {
-                auditAlertRuleList = result.getData().getList();
-                return auditAlertRuleList;
+                if (!result.getData().getList().isEmpty()) {
+                    auditAlertRuleList = result.getData().getList();
+                }
             } else {
                 LOGGER.error("fetchAlertPolicies fail:{}", result.getErrMsg());
             }
@@ -177,14 +181,12 @@ public class AuditAlertRuleManager {
      * Fetches audit data by retrieving audit alert rules and querying detailed audit information for each rule.
      *
      * @return List of {@link String} containing detailed audit information
-     * @see #fetchAlertRules()
+     * @see #fetchAlertRulesFromManager()
      */
-    public List<String> fetchAuditIds() {
-        // Retrieve all audit alert rules from the manager API
-        List<AuditAlertRule> auditAlertRules = fetchAlertRules();
-
+    public List<String> getAuditIds() {
+        List<String> auditIds = new ArrayList<>();
         // Process each audit alert rule to fetch corresponding auditIds
-        for (AuditAlertRule auditAlertRule : auditAlertRules) {
+        for (AuditAlertRule auditAlertRule : auditAlertRuleList) {
             // Convert comma-separated audit IDs to list and trim whitespace
             List<String> auditIdList = Arrays.stream(auditAlertRule.getAuditId().split(","))
                     .map(String::trim)
@@ -194,30 +196,6 @@ public class AuditAlertRuleManager {
 
         // Return empty list if no successful responses were received
         return auditIds;
-    }
-
-    /**
-     * Returns the current immutable snapshot of audit alert rules.
-     * Triggers an immediate fetch if the snapshot is empty and scheduler is not used.
-     */
-    public List<AuditAlertRule> getAuditAlertRuleList() {
-        if (auditAlertRuleList == null) {
-            fetchAlertRules();
-        }
-        List<AuditAlertRule> snapshot = auditAlertRuleList;
-        return snapshot == null ? Collections.emptyList() : snapshot;
-    }
-
-    /**
-     * Returns the current immutable snapshot of audit IDs derived from rules.
-     * Triggers an immediate fetch if snapshot is empty and scheduler is not used.
-     */
-    public List<String> getAuditIds() {
-        if (auditIds == null) {
-            fetchAlertRules();
-        }
-        List<String> snapshot = auditIds;
-        return snapshot == null ? Collections.emptyList() : snapshot;
     }
 
     /**

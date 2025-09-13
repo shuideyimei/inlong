@@ -34,7 +34,7 @@ class AuditAlertRuleManagerTest {
     private final AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
 
     @Test
-    void testFetchAlertRules() {
+    void testFetchAlertRulesFromManager() {
         // Mock data
         AuditAlertRule rule = new AuditAlertRule();
         rule.setId(1);
@@ -47,7 +47,7 @@ class AuditAlertRuleManagerTest {
         try {
             // Execute
             auditAlertRuleManager.init(new AppConfig());
-            List<AuditAlertRule> result = auditAlertRuleManager.fetchAlertRules();
+            List<AuditAlertRule> result = auditAlertRuleManager.fetchAlertRulesFromManager();
 
             // Verify
             assertNotNull(result);
@@ -71,7 +71,7 @@ class AuditAlertRuleManagerTest {
         try {
             // Execute
             auditAlertRuleManager.init(new AppConfig());
-            List<String> result = auditAlertRuleManager.fetchAuditIds();
+            List<String> result = auditAlertRuleManager.getAuditIds();
 
             // Verify
             assertNotNull(result);
