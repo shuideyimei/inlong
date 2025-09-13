@@ -142,7 +142,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains(">"));
         assertTrue(output.contains("threshold=10"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(50L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(50D);
     }
 
     @Test
@@ -195,7 +195,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains(">="));
         assertTrue(output.contains("threshold=10"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10d);
     }
 
     @Test
@@ -224,7 +224,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("<"));
         assertTrue(output.contains("threshold=20"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
     }
 
     @Test
@@ -253,7 +253,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("<="));
         assertTrue(output.contains("threshold=5"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
     }
 
     @Test
@@ -282,7 +282,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("=="));
         assertTrue(output.contains("threshold=5"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
     }
 
     @Test
@@ -360,7 +360,7 @@ class AlertEvaluatorTest {
         assertTrue(output.contains(">="));
         assertTrue(output.contains("threshold=10"));
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10L);
+        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10D);
     }
 
     @Test

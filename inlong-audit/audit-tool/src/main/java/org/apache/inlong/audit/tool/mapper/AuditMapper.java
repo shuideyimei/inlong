@@ -32,5 +32,5 @@ public interface AuditMapper {
             " from audit_data where audit_id = #{audit_id}" +
             " and log_ts between #{startLogTs} and #{endLogTs} group by inlong_group_id,inlong_stream_id")
     List<AuditMetric> getAuditMetrics(@Param("startLogTs") String startLogTs, @Param("endLogTs") String endLogTs,
-                                      @Param("audit_id") String auditId);
+            @Param("audit_id") String auditId);
 }

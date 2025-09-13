@@ -38,14 +38,14 @@ public class AlertEvaluator {
     private final AuditAlertRuleManager auditAlertRuleManager;
 
     public AlertEvaluator(PrometheusReporter prometheusReporter,
-                          AuditAlertRuleManager auditAlertRuleManager) {
+            AuditAlertRuleManager auditAlertRuleManager) {
         this.prometheusReporter = prometheusReporter;
         this.auditAlertRuleManager = auditAlertRuleManager;
     }
 
     public void evaluateAndReportAlert(List<AuditMetric> sourceMetrics,
-                                       List<AuditMetric> sinkMetrics,
-                                       AuditAlertRule alertRule) {
+            List<AuditMetric> sinkMetrics,
+            AuditAlertRule alertRule) {
         if (sourceMetrics == null || sinkMetrics == null) {
             return;
         }

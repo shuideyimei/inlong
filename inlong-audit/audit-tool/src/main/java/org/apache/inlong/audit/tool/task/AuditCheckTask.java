@@ -17,10 +17,10 @@
 
 package org.apache.inlong.audit.tool.task;
 
-import org.apache.inlong.audit.tool.dto.AuditAlertRule;
-import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.config.ConfigConstants;
+import org.apache.inlong.audit.tool.dto.AuditAlertRule;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.service.AuditMetricService;

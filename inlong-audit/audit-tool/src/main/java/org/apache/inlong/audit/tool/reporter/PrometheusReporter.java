@@ -17,12 +17,12 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import lombok.Getter;
 import org.apache.inlong.audit.tool.metric.AuditMetric;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.exporter.HTTPServer;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

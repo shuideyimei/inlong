@@ -17,8 +17,8 @@
 
 package org.apache.inlong.tool.service;
 
-import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.config.AppConfig;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
