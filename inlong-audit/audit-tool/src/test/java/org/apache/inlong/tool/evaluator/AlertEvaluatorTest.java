@@ -17,12 +17,13 @@
 
 package org.apache.inlong.tool.evaluator;
 
-import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.dto.AuditAlertCondition;
 import org.apache.inlong.audit.tool.dto.AuditAlertRule;
 import org.apache.inlong.audit.tool.entity.AuditMetric;
+import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,8 +75,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify no alert was triggered
         verifyNoInteractions(prometheusReporter);
@@ -93,8 +93,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify no alert was triggered
         verifyNoInteractions(prometheusReporter);
@@ -111,8 +110,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify no alert was triggered
         verifyNoInteractions(prometheusReporter);
@@ -124,8 +122,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetricWithAlert),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -143,8 +140,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -162,8 +158,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -181,8 +176,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -200,8 +194,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -219,8 +212,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify alert was triggered
         verify(prometheusReporter, times(1)).getAuditMetric();
@@ -238,8 +230,7 @@ class AlertEvaluatorTest {
         alertEvaluator.evaluateAndReportAlert(
                 Collections.singletonList(sourceMetric),
                 Collections.singletonList(sinkMetric),
-                alertRule
-        );
+                alertRule);
 
         // Verify no alert was triggered for unknown operator
         verifyNoInteractions(prometheusReporter);
