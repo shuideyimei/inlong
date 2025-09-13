@@ -137,6 +137,7 @@ public class AuditAlertRuleManager {
      * @return A list of {@link AuditAlertRule} objects if successful, or null if the request fails.
      */
     public List<AuditAlertRule> fetchAlertRulesFromManager() {
+        List<AuditAlertRule> auditAlertRules = new ArrayList<>();
         try {
             // Get the manager URL from app configuration
             String managerUrl = appConfig.getManagerUrl();
@@ -165,16 +166,14 @@ public class AuditAlertRuleManager {
 
             // Copy and return the list of audit alert rules
             if (result.isSuccess()) {
-                if (!result.getData().getList().isEmpty()) {
-                    auditAlertRuleList = result.getData().getList();
-                }
+                auditAlertRules = result.getData().getList();
             } else {
                 LOGGER.error("fetchAlertPolicies fail:{}", result.getErrMsg());
             }
         } catch (Exception e) {
             LOGGER.error("fetchAlertPolicies fail: ", e);
         }
-        return auditAlertRuleList;
+        return auditAlertRules;
     }
 
     /**
