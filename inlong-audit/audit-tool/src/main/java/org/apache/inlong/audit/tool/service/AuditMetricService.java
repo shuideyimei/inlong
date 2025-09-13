@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.service;
 
-import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.mapper.AuditMapper;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
@@ -32,7 +32,7 @@ public class AuditMetricService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditMetricService.class);
 
-    public List<AuditMetricVo> getStorageAuditMetrics(String auditId, String startLogTs, String endLogTs) {
+    public List<AuditMetric> getStorageAuditMetrics(String auditId, String startLogTs, String endLogTs) {
         try (SqlSession sqlSession = AuditSQLUtil.getSqlSession()) {
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
             return auditMapper.getAuditMetrics(startLogTs, endLogTs, auditId);

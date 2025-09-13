@@ -22,16 +22,16 @@ import io.prometheus.client.Gauge;
 
 public class AuditMetric {
 
-    private final Gauge sourcAndSinkAuditDiffMetric;
+    private final Gauge sourceAndSinkAuditDiffMetric;
 
     public AuditMetric(CollectorRegistry registry) {
-        this.sourcAndSinkAuditDiffMetric = Gauge.build()
+        this.sourceAndSinkAuditDiffMetric = Gauge.build()
                 .name("inlong_source_sink_diff")
                 .help("The difference in count between inflow and outflow")
                 .register(registry);
     }
 
     public void updateSourceAndSinkAuditDiffMetric(double diff) {
-        sourcAndSinkAuditDiffMetric.set(diff);
+        sourceAndSinkAuditDiffMetric.set(diff);
     }
 }

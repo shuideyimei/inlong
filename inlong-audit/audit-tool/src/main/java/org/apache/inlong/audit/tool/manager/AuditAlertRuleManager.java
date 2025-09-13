@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool.manager;
 
-import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
+import org.apache.inlong.audit.tool.dto.AuditAlertRule;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.AuditAlertRulePageRequest;

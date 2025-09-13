@@ -17,15 +17,10 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.DTO.MetricData;
-
 import java.util.Map;
 
 public interface MetricReporter {
 
     void init(Map<String, Object> config);
 
-    void report(MetricData metricData);
-    void close();
-    String getReporterType();
 }

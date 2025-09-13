@@ -17,9 +17,9 @@
 
 package org.apache.inlong.audit.tool.evaluator;
 
-import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
-import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.dto.AuditAlertCondition;
+import org.apache.inlong.audit.tool.dto.AuditAlertRule;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 
@@ -43,8 +43,8 @@ public class AlertEvaluator {
         this.auditAlertRuleManager = auditAlertRuleManager;
     }
 
-    public void evaluateAndReportAlert(List<AuditMetricVo> sourceMetrics,
-                                       List<AuditMetricVo> sinkMetrics,
+    public void evaluateAndReportAlert(List<AuditMetric> sourceMetrics,
+                                       List<AuditMetric> sinkMetrics,
                                        AuditAlertRule alertRule) {
         if (sourceMetrics == null || sinkMetrics == null) {
             return;
@@ -54,12 +54,12 @@ public class AlertEvaluator {
         double threshold = condition.getValue();
         String op = condition.getOperator();
 
-        for (AuditMetricVo source : sourceMetrics) {
+        for (AuditMetric source : sourceMetrics) {
             if (!Objects.equals(source.getInlongGroupId(), alertRule.getInlongGroupId()) ||
                     !Objects.equals(source.getInlongStreamId(), alertRule.getInlongStreamId())) {
                 continue;
             }
-            for (AuditMetricVo sink : sinkMetrics) {
+            for (AuditMetric sink : sinkMetrics) {
                 if (!Objects.equals(source.getInlongGroupId(), sink.getInlongGroupId()) ||
                         !Objects.equals(source.getInlongStreamId(), sink.getInlongStreamId())) {
                     continue;
@@ -71,7 +71,7 @@ public class AlertEvaluator {
 
                 double diff = (sink.getCount() - source.getCount()) / (double) source.getCount();
 
-                boolean hit = false;
+                boolean hit;
 
                 switch (op) {
                     case ">":

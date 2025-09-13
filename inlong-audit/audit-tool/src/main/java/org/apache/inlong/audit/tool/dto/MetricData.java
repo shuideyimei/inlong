@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.DTO;
+package org.apache.inlong.audit.tool.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,12 +32,12 @@ import lombok.NoArgsConstructor;
 public class MetricData {
 
     /**
-     * The Inlong Group ID, used as a primary dimension for metrics.
+     * The InLong Group ID, used as a primary dimension for metrics.
      */
     private String groupId;
 
     /**
-     * The Inlong Stream ID, used as a secondary dimension for metrics.
+     * The InLong Stream ID, used as a secondary dimension for metrics.
      */
     private String streamId;
 
@@ -52,10 +52,6 @@ public class MetricData {
      * was triggered for this DTO data point.
      */
     private AlertInfo alertInfo;
-
-    public MetricData(Object groupId, Object streamId, Object dataLossRate, Object dataLossCount, Object auditCount,
-            Object expectedCount, Object receivedCount) {
-    }
 
     /**
      * A nested static class to hold details about a specific alert.

@@ -17,7 +17,7 @@
 
 package org.apache.inlong.tool.service;
 
-import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
@@ -31,7 +31,7 @@ import java.util.List;
 public class AuditMetricServiceTest {
 
     @Test
-    public void testGetDataproxyAuditMetrics() {
+    public void testGetDataProxyAuditMetrics() {
         // Query service initialization
         AppConfig appConfig = new AppConfig();
         AuditSQLUtil.initialize(appConfig.getProperties());
@@ -42,12 +42,12 @@ public class AuditMetricServiceTest {
         String startLogTs = LocalDateTime.now().minusMinutes(5).format(formatter);
 
         // Search for relevant data
-        List<AuditMetricVo> dataproxyAuditMetrics =
+        List<AuditMetric> dataproxyAuditMetrics =
                 auditMetricService.getStorageAuditMetrics("5", startLogTs, endLogTs);
 
-        for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
-            System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "
-                    + auditMetricVo.getCount());
+        for (AuditMetric auditMetric : dataproxyAuditMetrics) {
+            System.out.println(auditMetric.getInlongGroupId() + " " + auditMetric.getInlongStreamId() + " "
+                    + auditMetric.getCount());
         }
     }
 }

@@ -17,9 +17,6 @@
 
 package org.apache.inlong.audit.tool.reporter;
 
-import org.apache.inlong.audit.tool.DTO.MetricData;
-
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
@@ -77,41 +74,4 @@ public class OpenTelemetryReporter implements MetricReporter {
                 });
     }
 
-    @Override
-    public void report(MetricData metricData) {
-        if (metricData == null) {
-            LOGGER.warn("Received null metricData, skipping report.");
-            return;
-        }
-
-        if (metricData.getAlertInfo() != null) {
-            Attributes alertAttributes = Attributes.of(
-                    AttributeKey.stringKey(KEY_GROUP_ID), metricData.getGroupId(),
-                    AttributeKey.stringKey(KEY_STREAM_ID), metricData.getStreamId(),
-                    AttributeKey.stringKey(KEY_ALERT_TYPE), metricData.getAlertInfo().getAlertType());
-            alertCounter.add(1, alertAttributes);
-        }
-
-        if (metricData.getDataLossRate() != null) {
-            Attributes rateAttributes = Attributes.of(
-                    AttributeKey.stringKey(KEY_GROUP_ID), metricData.getGroupId(),
-                    AttributeKey.stringKey(KEY_STREAM_ID), metricData.getStreamId());
-            // We just update the latest value in our map. The callback will handle reporting.
-            dataLossRateValues.put(rateAttributes, metricData.getDataLossRate());
-        }
-    }
-
-    @Override
-    public String getReporterType() {
-        return KEY_OTEL;
-    }
-
-    @Override
-    public void close() {
-        if (meterProvider != null) {
-            LOGGER.info("Closing OpenTelemetry MeterProvider.");
-            // shutdown() is synchronous and ensures all metrics are flushed.
-            meterProvider.shutdown();
-        }
-    }
 }

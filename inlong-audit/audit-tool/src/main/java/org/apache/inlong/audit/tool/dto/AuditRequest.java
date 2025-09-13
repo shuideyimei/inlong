@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.DTO;
+package org.apache.inlong.audit.tool.dto;
 
 import org.apache.inlong.manager.common.enums.TimeStaticsDim;
 

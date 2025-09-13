@@ -17,8 +17,8 @@
 
 package org.apache.inlong.audit.tool.task;
 
-import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
-import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.dto.AuditAlertRule;
+import org.apache.inlong.audit.tool.entity.AuditMetric;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.config.ConfigConstants;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
@@ -47,8 +47,8 @@ public class AuditCheckTask {
     private final AuditMetricService auditMetricService;
     private Integer executionIntervalTime;
     private Integer intervalTimeMinute;
-    private Integer delayTimeMinute;
-    private static final DateTimeFormatter LOGTS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final Integer delayTimeMinute;
+    private static final DateTimeFormatter LOGS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private String sourceAuditId;
 
     public AuditCheckTask(
@@ -92,12 +92,12 @@ public class AuditCheckTask {
         // Obtain alarm strategy
         List<AuditAlertRule> alertRules = auditAlertRuleManager.getAuditAlertRuleList();
 
-        // Obtain the range of logts that need to be queried
+        // Obtain the range of logs that need to be queried
         String startLogTs = getStartLogTs();
         String endLogTs = getEndLogTs();
 
         // Query the relevant indicator data of auditId source
-        List<AuditMetricVo> sourceAuditMetric =
+        List<AuditMetric> sourceAuditMetric =
                 auditMetricService.getStorageAuditMetrics(sourceAuditId, startLogTs, endLogTs);
         if (sourceAuditMetric == null) {
             return;
@@ -105,9 +105,9 @@ public class AuditCheckTask {
 
         // Compare the source auditId related indicator data with the sink auditId related indicator data
         for (String sinkAuditId : sinkAuditIds) {
-            List<AuditMetricVo> sinkAuditMetrics =
+            List<AuditMetric> sinkAuditMetrics =
                     auditMetricService.getStorageAuditMetrics(sinkAuditId, startLogTs, endLogTs);
-            if (sinkAuditMetrics == null || sinkAuditMetrics.size() == 0) {
+            if (sinkAuditMetrics == null || sinkAuditMetrics.isEmpty()) {
                 continue;
             }
             for (AuditAlertRule alertRule : alertRules) {
@@ -137,13 +137,13 @@ public class AuditCheckTask {
                 .withSecond(0)
                 .minusMinutes(delayTimeMinute)
                 .minusMinutes(intervalTimeMinute)
-                .format(LOGTS_FMT);
+                .format(LOGS_FMT);
     }
     private String getEndLogTs() {
         return LocalDateTime.now()
                 .withSecond(0)
                 .minusMinutes(delayTimeMinute)
-                .format(LOGTS_FMT);
+                .format(LOGS_FMT);
     }
 
 }
