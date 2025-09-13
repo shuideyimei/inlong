@@ -17,7 +17,6 @@
 
 package org.apache.inlong.audit.tool.task;
 
-import org.apache.inlong.audit.AuditIdEnum;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.config.AppConfig;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -60,17 +58,18 @@ public class AuditCheckTask {
         this.auditMetricService = new AuditMetricService();
         try {
             this.executionIntervalTime =
-                    Integer.valueOf(appConfig.getProperties().getProperty(ConfigConstants.KEY_DELAY_TIME,"1"));
+                    Integer.valueOf(appConfig.getProperties().getProperty(ConfigConstants.KEY_DELAY_TIME, "1"));
             this.intervalTimeMinute =
                     Integer.parseInt(appConfig.getProperties().getProperty(ConfigConstants.KEY_INTERVAL_TIME, "1"));
-            this.sourceAuditId=appConfig.getProperties().getProperty(ConfigConstants.KEY_SOURCE_AUDIT_ID, "5");
+            this.sourceAuditId = appConfig.getProperties().getProperty(ConfigConstants.KEY_SOURCE_AUDIT_ID, "5");
         } catch (Exception e) {
-            LOGGER.info("Failed to read configuration information, default source AuditId is 5, delay execution time is 1, time interval is 1");
+            LOGGER.info(
+                    "Failed to read configuration information, default source AuditId is 5, delay execution time is 1, time interval is 1");
             this.executionIntervalTime = 1;
-            this.intervalTimeMinute=1;
-            this.sourceAuditId="5";
+            this.intervalTimeMinute = 1;
+            this.sourceAuditId = "5";
         }
-        this.delayTimeMinute=executionIntervalTime;
+        this.delayTimeMinute = executionIntervalTime;
     }
 
     /**
@@ -86,27 +85,29 @@ public class AuditCheckTask {
     private void checkAuditData() {
         // Obtain auditIds provided by the interface
         List<String> sinkAuditIds = auditAlertRuleManager.getAuditIds();
-        if(sinkAuditIds==null){
+        if (sinkAuditIds == null) {
             return;
         }
 
         // Obtain alarm strategy
         List<AuditAlertRule> alertRules = auditAlertRuleManager.getAuditAlertRuleList();
 
-        //Obtain the range of logts that need to be queried
-        String startLogTs=getStartLogTs();
-        String endLogTs=getEndLogTs();
+        // Obtain the range of logts that need to be queried
+        String startLogTs = getStartLogTs();
+        String endLogTs = getEndLogTs();
 
-        //Query the relevant indicator data of auditId source
-        List<AuditMetricVo> sourceAuditMetric = auditMetricService.getStorageAuditMetrics(sourceAuditId,startLogTs,endLogTs);
-        if(sourceAuditMetric==null){
+        // Query the relevant indicator data of auditId source
+        List<AuditMetricVo> sourceAuditMetric =
+                auditMetricService.getStorageAuditMetrics(sourceAuditId, startLogTs, endLogTs);
+        if (sourceAuditMetric == null) {
             return;
         }
 
-        //Compare the source auditId related indicator data with the sink auditId related indicator data
-        for(String sinkAuditId:sinkAuditIds){
-            List<AuditMetricVo> sinkAuditMetrics = auditMetricService.getStorageAuditMetrics(sinkAuditId,startLogTs,endLogTs);
-            if(sinkAuditMetrics==null||sinkAuditMetrics.size()==0){
+        // Compare the source auditId related indicator data with the sink auditId related indicator data
+        for (String sinkAuditId : sinkAuditIds) {
+            List<AuditMetricVo> sinkAuditMetrics =
+                    auditMetricService.getStorageAuditMetrics(sinkAuditId, startLogTs, endLogTs);
+            if (sinkAuditMetrics == null || sinkAuditMetrics.size() == 0) {
                 continue;
             }
             for (AuditAlertRule alertRule : alertRules) {
@@ -131,14 +132,14 @@ public class AuditCheckTask {
         }
     }
 
-    private String getStartLogTs(){
+    private String getStartLogTs() {
         return LocalDateTime.now()
                 .withSecond(0)
                 .minusMinutes(delayTimeMinute)
                 .minusMinutes(intervalTimeMinute)
                 .format(LOGTS_FMT);
     }
-    private String getEndLogTs(){
+    private String getEndLogTs() {
         return LocalDateTime.now()
                 .withSecond(0)
                 .minusMinutes(delayTimeMinute)

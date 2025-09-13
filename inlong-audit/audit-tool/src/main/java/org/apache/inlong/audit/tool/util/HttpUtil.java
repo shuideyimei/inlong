@@ -41,12 +41,10 @@ import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * HTTP utils
@@ -60,7 +58,7 @@ public class HttpUtil {
      * Send an HTTP request
      */
     public static <T> T request(RestTemplate restTemplate, String url, HttpMethod httpMethod, Object requestBody,
-                                MultiValueMap<String, String> header, ParameterizedTypeReference<T> typeReference) {
+            MultiValueMap<String, String> header, ParameterizedTypeReference<T> typeReference) {
         if (log.isDebugEnabled()) {
             log.debug("begin request to {} by request body {}", url, GSON.toJson(requestBody));
         }
@@ -71,6 +69,5 @@ public class HttpUtil {
         Preconditions.expectTrue(response.getStatusCode().is2xxSuccessful(), "Request failed: " + response.getBody());
         return response.getBody();
     }
-
 
 }

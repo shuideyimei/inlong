@@ -22,19 +22,13 @@ import org.apache.inlong.audit.tool.mapper.AuditMapper;
 import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
 import org.apache.ibatis.session.SqlSession;
-import org.apache.inlong.audit.tool.config.ConfigConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 public class AuditMetricService {
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditMetricService.class);
 

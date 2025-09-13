@@ -17,11 +17,12 @@
 
 package org.apache.inlong.audit.tool.util;
 
+import org.apache.inlong.audit.tool.mapper.AuditMapper;
+
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.inlong.audit.tool.mapper.AuditMapper;
 
 import javax.sql.DataSource;
 

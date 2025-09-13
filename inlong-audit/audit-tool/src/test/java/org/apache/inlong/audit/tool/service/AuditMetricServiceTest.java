@@ -18,14 +18,13 @@
 package org.apache.inlong.audit.tool.service;
 
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
-import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
+import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AuditMetricServiceTest {
@@ -42,7 +41,8 @@ public class AuditMetricServiceTest {
         String startLogTs = LocalDateTime.now().minusMinutes(5).format(formatter);
 
         // Search for relevant data
-        List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getStorageAuditMetrics("5",startLogTs,endLogTs);
+        List<AuditMetricVo> dataproxyAuditMetrics =
+                auditMetricService.getStorageAuditMetrics("5", startLogTs, endLogTs);
 
         for (AuditMetricVo auditMetricVo : dataproxyAuditMetrics) {
             System.out.println(auditMetricVo.getInlongGroupId() + " " + auditMetricVo.getInlongStreamId() + " "

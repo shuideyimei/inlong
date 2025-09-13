@@ -23,6 +23,7 @@ import org.apache.inlong.audit.tool.response.Response;
 import org.apache.inlong.audit.tool.util.AuditAlertRulePageRequest;
 import org.apache.inlong.audit.tool.util.HttpUtil;
 import org.apache.inlong.audit.tool.util.PageResult;
+import org.apache.inlong.audit.utils.HttpUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +33,15 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.apache.inlong.audit.utils.HttpUtils;
 
 import static org.apache.inlong.audit.tool.config.ConfigConstants.AUDIT_ALERT_RULE_lIST_PATH;
 
@@ -53,6 +57,7 @@ public class AuditAlertRuleManager {
     private List<String> auditIds = new ArrayList<>();
 
     private static class Holder {
+
         private static final AuditAlertRuleManager INSTANCE = new AuditAlertRuleManager();
     }
 
@@ -73,13 +78,14 @@ public class AuditAlertRuleManager {
         }
         if (appConfig != null) {
             this.appConfig = appConfig;
-        }else {
+        } else {
             LOGGER.error("appConfig must not be null");
             throw new IllegalStateException("appConfig is null");
         }
     }
 
-    private AuditAlertRuleManager() {}
+    private AuditAlertRuleManager() {
+    }
 
     // Single-thread scheduler for periodic fetch
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -107,7 +113,8 @@ public class AuditAlertRuleManager {
      * If the configured interval is <= 0, runs immediately once and returns.
      */
     public synchronized void schedule() {
-        int executionIntervalTime = Integer.parseInt(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
+        int executionIntervalTime =
+                Integer.parseInt(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
         if (executionIntervalTime < 0) {
             LOGGER.warn("Execution Interval Time {} is in the past. Executing immediately", executionIntervalTime);
             executionIntervalTime = 0;
@@ -116,8 +123,7 @@ public class AuditAlertRuleManager {
                 this::runFetchTaskSafe,
                 0L, // initial delay: fetch immediately
                 executionIntervalTime,
-                TimeUnit.MINUTES
-        );
+                TimeUnit.MINUTES);
         LOGGER.info("Scheduled fetch task at {}", executionIntervalTime);
     }
 
@@ -133,7 +139,8 @@ public class AuditAlertRuleManager {
             String managerUrl = appConfig.getManagerUrl();
 
             // Ensure there is only one forward slash between the base URL and path
-            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl) + AUDIT_ALERT_RULE_lIST_PATH;
+            String url = (managerUrl.endsWith("/") ? managerUrl.substring(0, managerUrl.length() - 1) : managerUrl)
+                    + AUDIT_ALERT_RULE_lIST_PATH;
 
             Map<String, String> authHeader = HttpUtils.getAuthHeader(appConfig.getSecretId(), appConfig.getSecretKey());
             MultiValueMap<String, String> header = new LinkedMultiValueMap<>();
@@ -154,10 +161,10 @@ public class AuditAlertRuleManager {
             LOGGER.info("success to query audit info for url ={}", url);
 
             // Copy and return the list of audit alert rules
-            if(result.isSuccess()) {
+            if (result.isSuccess()) {
                 auditAlertRuleList = result.getData().getList();
                 return auditAlertRuleList;
-            }else{
+            } else {
                 LOGGER.error("fetchAlertPolicies fail:{}", result.getErrMsg());
             }
         } catch (Exception e) {

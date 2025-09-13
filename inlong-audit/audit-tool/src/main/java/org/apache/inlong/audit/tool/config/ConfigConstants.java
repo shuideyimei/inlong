@@ -38,9 +38,9 @@ public class ConfigConstants {
     public static final String AUDIT_TOOL_DATA_LOSS_RATE = "audit_tool_data_loss_rate";
     public static final String DESC_AUDIT_TOOL_DATA_LOSS_RATE = "Data loss rate between Sort and DataProxy";
     public static final String AUDIT_ALERT_RULE_lIST_PATH = "/api/audit/alert/rule/list";
-    public static final String KEY_DELAY_TIME="audit.data.time.delay.minute";
-    public static final String KEY_INTERVAL_TIME="audit.data.time.interval.minute";
-    public static final String KEY_SOURCE_AUDIT_ID="audit.id.source";
-    public static final String KEY_PROMETHEUS_ENABLED="prometheus.enabled";
-    public static final String KEY_PROMETHEUS_ENDPOINT="prometheus.endpoint";
+    public static final String KEY_DELAY_TIME = "audit.data.time.delay.minute";
+    public static final String KEY_INTERVAL_TIME = "audit.data.time.interval.minute";
+    public static final String KEY_SOURCE_AUDIT_ID = "audit.id.source";
+    public static final String KEY_PROMETHEUS_ENABLED = "prometheus.enabled";
+    public static final String KEY_PROMETHEUS_ENDPOINT = "prometheus.endpoint";
 }

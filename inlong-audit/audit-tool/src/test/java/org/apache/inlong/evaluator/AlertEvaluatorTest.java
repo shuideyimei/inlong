@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.inlong.evaluator;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
@@ -57,14 +74,12 @@ class AlertEvaluatorTest {
         AuditAlertRule alertRule = createAlertRule(">", 10.0);
 
         // Test with null dataProxyMetrics
-        assertDoesNotThrow(() ->
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(null, new ArrayList<>(), alertRule)
-        );
+        assertDoesNotThrow(
+                () -> alertEvaluator.printAndReportDataproxyCompareWithStorage(null, new ArrayList<>(), alertRule));
 
         // Test with null storageMetrics
-        assertDoesNotThrow(() ->
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(new ArrayList<>(), null, alertRule)
-        );
+        assertDoesNotThrow(
+                () -> alertEvaluator.printAndReportDataproxyCompareWithStorage(new ArrayList<>(), null, alertRule));
     }
 
     @Test
@@ -352,7 +367,6 @@ class AlertEvaluatorTest {
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(10L);
     }
 
-
     @Test
     void testPrintAndReportDataproxyCompareWithStorage_NullGroupId() {
         AuditAlertRule alertRule = createAlertRule(">", 10.0);
@@ -371,9 +385,8 @@ class AlertEvaluatorTest {
         st.setCount(50);
         storageMetrics.add(st);
 
-        assertDoesNotThrow(() ->
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule)
-        );
+        assertDoesNotThrow(() -> alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics,
+                storageMetrics, alertRule));
     }
 
     @Test

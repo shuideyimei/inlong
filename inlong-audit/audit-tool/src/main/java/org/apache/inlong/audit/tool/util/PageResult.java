@@ -18,17 +18,12 @@
 package org.apache.inlong.audit.tool.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.pagehelper.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
