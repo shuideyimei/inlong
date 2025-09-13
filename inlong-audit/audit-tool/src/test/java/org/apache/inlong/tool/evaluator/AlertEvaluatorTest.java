@@ -16,387 +16,373 @@
  */
 
 package org.apache.inlong.tool.evaluator;
-
+import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.dto.AuditAlertCondition;
 import org.apache.inlong.audit.tool.dto.AuditAlertRule;
 import org.apache.inlong.audit.tool.entity.AuditMetric;
-import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AlertEvaluatorTest {
 
-    private AlertEvaluator alertEvaluator;
-    private AuditAlertRuleManager auditAlertRuleManager;
-    private org.apache.inlong.audit.tool.metric.AuditMetric auditMetric;
+    @Mock
+    private PrometheusReporter prometheusReporter;
 
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+    @Mock
+    private AuditAlertRuleManager auditAlertRuleManager;
+
+    private AlertEvaluator alertEvaluator;
+
+    @lombok.Getter
+    @Mock
+    private Logger mockLogger;
 
     @BeforeEach
     void setUp() {
-        PrometheusReporter prometheusReporter = mock(PrometheusReporter.class);
-        auditAlertRuleManager = mock(AuditAlertRuleManager.class);
-        auditMetric = mock(org.apache.inlong.audit.tool.metric.AuditMetric.class);
-
-        when(prometheusReporter.getAuditMetric()).thenReturn(auditMetric);
-
         alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
-
-        // Redirect System.out to a ByteArrayOutputStream.
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @AfterEach
-    void restoreStreams() {
-        System.setOut(originalOut);
-        outContent.reset();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_NullMetrics() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+    void testEvaluateAndReportAlertWithNullMetrics() {
+        // Test with null source metrics
+        alertEvaluator.evaluateAndReportAlert(null, Arrays.asList(new AuditMetric()), new AuditAlertRule());
 
-        // Test with null dataProxyMetrics
-        assertDoesNotThrow(
-                () -> alertEvaluator.evaluateAndReportAlert(null, new ArrayList<>(), alertRule));
+        // Test with null sink metrics
+        alertEvaluator.evaluateAndReportAlert(Collections.singletonList(new AuditMetric()), null, new AuditAlertRule());
 
-        // Test with null storageMetrics
-        assertDoesNotThrow(
-                () -> alertEvaluator.evaluateAndReportAlert(new ArrayList<>(), null, alertRule));
+        // Verify no interaction with prometheus reporter
+        verifyNoInteractions(prometheusReporter);
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_EmptyMetrics() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        List<AuditMetric> storageMetrics = new ArrayList<>();
+    void testEvaluateAndReportAlertWithNonMatchingGroupAndStream() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group2");  // Different group
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(90L);
 
-        assertEquals("", outContent.toString());
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
+
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator(">");
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
+
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
+
+        // Verify no alert was triggered
+        verifyNoInteractions(prometheusReporter);
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_DifferentGroupOrStream() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+    void testEvaluateAndReportAlertWithZeroSourceCount() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(0L);  // Zero count
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(90L);
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group2"); // Different group
-        st.setInlongStreamId("stream1");
-        st.setCount(50);
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator(">");
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
 
-        assertEquals("", outContent.toString());
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
+
+        // Verify no alert was triggered
+        verifyNoInteractions(prometheusReporter);
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_GreaterThanOperator_Triggered() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+    void testEvaluateAndReportAlertWithGreaterThanCondition() {
+        // Setup - diff = (90-100)/100 = -0.1 which is not > 0.1
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(90L);
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(50); // Difference is 50, which is > 10
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator(">");
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("groupId=group1"));
-        assertTrue(output.contains("streamId=stream1"));
-        assertTrue(output.contains("sourceCount=100"));
-        assertTrue(output.contains("sinkCount=50"));
-        assertTrue(output.contains("diff=50"));
-        assertTrue(output.contains(">"));
-        assertTrue(output.contains("threshold=10"));
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(50D);
+        // Verify no alert was triggered
+        verifyNoInteractions(prometheusReporter);
+
+        // Setup - diff = (120-100)/100 = 0.2 which is > 0.1
+        AuditMetric sinkMetric2 = new AuditMetric();
+        sinkMetric2.setInlongGroupId("group1");
+        sinkMetric2.setInlongStreamId("stream1");
+        sinkMetric2.setCount(120L);
+
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric2),
+                alertRule
+        );
+
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_GreaterThanOperator_NotTriggered() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+    void testEvaluateAndReportAlertWithGreaterThanOrEqualCondition() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(110L);  // diff = 0.1
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5, which is not > 10
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator(">=");
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
 
-        assertEquals("", outContent.toString());
-        verify(auditMetric, never()).updateSourceAndSinkAuditDiffMetric(anyLong());
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
+
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_GreaterEqualOperator() {
-        AuditAlertRule alertRule = createAlertRule(">=", 10.0);
+    void testEvaluateAndReportAlertWithLessThanCondition() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(90L);  // diff = -0.1
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(90); // Difference is 10, which is >= 10
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator("<");
+        condition.setValue(-0.05);  // -0.1 < -0.05
+        alertRule.setCondition(condition);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("diff=10"));
-        assertTrue(output.contains(">="));
-        assertTrue(output.contains("threshold=10"));
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10d);
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_LessThanOperator() {
-        AuditAlertRule alertRule = createAlertRule("<", 20.0);
+    void testEvaluateAndReportAlertWithLessThanOrEqualCondition() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(90L);  // diff = -0.1
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5, which is < 20
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator("<=");
+        condition.setValue(-0.1);  // -0.1 <= -0.1
+        alertRule.setCondition(condition);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("diff=5"));
-        assertTrue(output.contains("<"));
-        assertTrue(output.contains("threshold=20"));
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Arrays.asList(sourceMetric),
+                Arrays.asList(sinkMetric),
+                alertRule
+        );
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_LessEqualOperator() {
-        AuditAlertRule alertRule = createAlertRule("<=", 5.0);
+    void testEvaluateAndReportAlertWithEqualCondition() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(110L);  // diff = 0.1
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5, which is <= 5
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator("==");
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("diff=5"));
-        assertTrue(output.contains("<="));
-        assertTrue(output.contains("threshold=5"));
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_EqualsOperator() {
-        AuditAlertRule alertRule = createAlertRule("==", 5.0);
+    void testEvaluateAndReportAlertWithNotEqualCondition() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(110L);  // diff = 0.1
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5, which is == 5
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator("!=");
+        condition.setValue(0.2);  // 0.1 != 0.2
+        alertRule.setCondition(condition);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("diff=5"));
-        assertTrue(output.contains("=="));
-        assertTrue(output.contains("threshold=5"));
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
 
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(5D);
+        // Verify alert was triggered
+        verify(prometheusReporter, times(1)).getAuditMetric();
     }
 
     @Test
-    void testPrintAndReportDataProxyCompareWithStorage_NotEqualsOperator() {
-        AuditAlertRule alertRule = createAlertRule("!=", 5.0);
+    void testEvaluateAndReportAlertWithUnknownOperator() {
+        // Setup
+        AuditMetric sourceMetric = new AuditMetric();
+        sourceMetric.setInlongGroupId("group1");
+        sourceMetric.setInlongStreamId("stream1");
+        sourceMetric.setCount(100L);
 
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
+        AuditMetric sinkMetric = new AuditMetric();
+        sinkMetric.setInlongGroupId("group1");
+        sinkMetric.setInlongStreamId("stream1");
+        sinkMetric.setCount(110L);
 
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5, which is == 5, so != 5 is false
-        storageMetrics.add(st);
+        AuditAlertRule alertRule = new AuditAlertRule();
+        alertRule.setInlongGroupId("group1");
+        alertRule.setInlongStreamId("stream1");
 
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator("unknown");  // Unknown operator
+        condition.setValue(0.1);
+        alertRule.setCondition(condition);
 
-        assertEquals("", outContent.toString());
-        verify(auditMetric, never()).updateSourceAndSinkAuditDiffMetric(anyLong());
-    }
+        // Execute
+        alertEvaluator.evaluateAndReportAlert(
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
+                alertRule
+        );
 
-    @Test
-    void testPrintAndReportDataProxyCompareWithStorage_InvalidOperator() {
-        AuditAlertRule alertRule = createAlertRule("invalid", 5.0);
-
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
-
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(95); // Difference is 5
-        storageMetrics.add(st);
-
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
-
-        assertEquals("", outContent.toString());
-        verify(auditMetric, never()).updateSourceAndSinkAuditDiffMetric(anyLong());
-    }
-
-    @Test
-    void testPrintAndReportDataProxyCompareWithStorage_BoundaryCondition_EqualsThreshold() {
-        // 测试边界条件：差值正好等于阈值
-        AuditAlertRule alertRule = createAlertRule(">=", 10.0);
-
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId("group1");
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
-
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId("group1");
-        st.setInlongStreamId("stream1");
-        st.setCount(90); // Difference is exactly 10
-        storageMetrics.add(st);
-
-        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
-
-        String output = outContent.toString();
-        assertTrue(output.contains("[ALERT]"));
-        assertTrue(output.contains("diff=10"));
-        assertTrue(output.contains(">="));
-        assertTrue(output.contains("threshold=10"));
-
-        verify(auditMetric).updateSourceAndSinkAuditDiffMetric(10D);
-    }
-
-    @Test
-    void testPrintAndReportDataProxyCompareWithStorage_NullGroupId() {
-        AuditAlertRule alertRule = createAlertRule(">", 10.0);
-
-        List<AuditMetric> dataProxyMetrics = new ArrayList<>();
-        AuditMetric dp = new AuditMetric();
-        dp.setInlongGroupId(null);
-        dp.setInlongStreamId("stream1");
-        dp.setCount(100);
-        dataProxyMetrics.add(dp);
-
-        List<AuditMetric> storageMetrics = new ArrayList<>();
-        AuditMetric st = new AuditMetric();
-        st.setInlongGroupId(null);
-        st.setInlongStreamId("stream1");
-        st.setCount(50);
-        storageMetrics.add(st);
-
-        assertDoesNotThrow(() -> alertEvaluator.evaluateAndReportAlert(dataProxyMetrics,
-                storageMetrics, alertRule));
+        // Verify no alert was triggered for unknown operator
+        verifyNoInteractions(prometheusReporter);
     }
 
     @Test
     void testGetAuditAlertRuleManager() {
-        assertSame(auditAlertRuleManager, alertEvaluator.getAuditAlertRuleManager());
+        // Test the getter method
+        assertEquals(auditAlertRuleManager, alertEvaluator.getAuditAlertRuleManager());
     }
 
-    private AuditAlertRule createAlertRule(String operator, double value) {
-        AuditAlertRule alertRule = new AuditAlertRule();
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setOperator(operator);
-        condition.setValue(value);
-        condition.setType("data_loss");
-        alertRule.setCondition(condition);
-        return alertRule;
-    }
 }

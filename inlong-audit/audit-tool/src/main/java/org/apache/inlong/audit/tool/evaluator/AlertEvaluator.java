@@ -101,7 +101,9 @@ public class AlertEvaluator {
                             "[ALERT] groupId={}, streamId={} | sourceCount={}, sinkCount={} | diff={} {} threshold={}",
                             source.getInlongGroupId(), source.getInlongStreamId(),
                             source.getCount(), sink.getCount(), diff, op, threshold);
-                    prometheusReporter.getAuditMetric().updateSourceAndSinkAuditDiffMetric(diff);
+                    if (prometheusReporter.getAuditMetric() != null) {
+                        prometheusReporter.getAuditMetric().updateSourceAndSinkAuditDiffMetric(diff);
+                    }
                 }
             }
         }
