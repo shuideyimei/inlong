@@ -29,7 +29,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,7 +53,7 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithNullMetrics() {
         // Test with null source metrics
-        alertEvaluator.evaluateAndReportAlert(null, Arrays.asList(new AuditMetric()), new AuditAlertRule());
+        alertEvaluator.evaluateAndReportAlert(null, Collections.singletonList(new AuditMetric()), new AuditAlertRule());
 
         // Test with null sink metrics
         alertEvaluator.evaluateAndReportAlert(Collections.singletonList(new AuditMetric()), null, new AuditAlertRule());
@@ -66,10 +65,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithNonMatchingGroupAndStream() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group2", "stream1", 90L); // Different group
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group2", 90L); // Different group
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", ">", 0.1);
+        AuditAlertRule alertRule = createAlertRule(">", 0.1);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -85,10 +84,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithZeroSourceCount() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 0L); // Zero count
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 90L);
+        AuditMetric sourceMetric = createAuditMetric("group1", 0L); // Zero count
+        AuditMetric sinkMetric = createAuditMetric("group1", 90L);
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", ">", 0.1);
+        AuditAlertRule alertRule = createAlertRule(">", 0.1);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -103,11 +102,10 @@ class AlertEvaluatorTest {
 
     @Test
     void testEvaluateAndReportAlertWithGreaterThanCondition() {
-        // Setup - diff = (90-100)/100 = -0.1 which is not > 0.1
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 90L);
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 90L);
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", ">", 0.1);
+        AuditAlertRule alertRule = createAlertRule(">", 0.1);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -120,7 +118,7 @@ class AlertEvaluatorTest {
         verifyNoInteractions(prometheusReporter);
 
         // Setup - diff = (120-100)/100 = 0.2 which is > 0.1
-        AuditMetric sinkMetricWithAlert = createAuditMetric("group1", "stream1", 120L);
+        AuditMetric sinkMetricWithAlert = createAuditMetric("group1", 120L);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -136,10 +134,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithGreaterThanOrEqualCondition() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 110L); // diff = 0.1
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 110L); // diff = 0.1
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", ">=", 0.1);
+        AuditAlertRule alertRule = createAlertRule(">=", 0.1);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -155,10 +153,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithLessThanCondition() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 90L); // diff = -0.1
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 90L); // diff = -0.1
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", "<", -0.05); // -0.1 < -0.05
+        AuditAlertRule alertRule = createAlertRule("<", -0.05); // -0.1 < -0.05
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -174,15 +172,15 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithLessThanOrEqualCondition() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 90L); // diff = -0.1
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 90L); // diff = -0.1
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", "<=", -0.1); // -0.1 <= -0.1
+        AuditAlertRule alertRule = createAlertRule("<=", -0.1); // -0.1 <= -0.1
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
-                Arrays.asList(sourceMetric),
-                Arrays.asList(sinkMetric),
+                Collections.singletonList(sourceMetric),
+                Collections.singletonList(sinkMetric),
                 alertRule
         );
 
@@ -193,10 +191,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithEqualCondition() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 110L); // diff = 0.1
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 110L); // diff = 0.1
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", "==", 0.1);
+        AuditAlertRule alertRule = createAlertRule("==", 0.1);
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -212,10 +210,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithNotEqualCondition() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 110L); // diff = 0.1
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 110L); // diff = 0.1
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", "!=", 0.2); // 0.1 != 0.2
+        AuditAlertRule alertRule = createAlertRule("!=", 0.2); // 0.1 != 0.2
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -231,10 +229,10 @@ class AlertEvaluatorTest {
     @Test
     void testEvaluateAndReportAlertWithUnknownOperator() {
         // Setup
-        AuditMetric sourceMetric = createAuditMetric("group1", "stream1", 100L);
-        AuditMetric sinkMetric = createAuditMetric("group1", "stream1", 110L);
+        AuditMetric sourceMetric = createAuditMetric("group1", 100L);
+        AuditMetric sinkMetric = createAuditMetric("group1", 110L);
 
-        AuditAlertRule alertRule = createAlertRule("group1", "stream1", "unknown", 0.1); // Unknown operator
+        AuditAlertRule alertRule = createAlertRule("unknown", 0.1); // Unknown operator
 
         // Execute
         alertEvaluator.evaluateAndReportAlert(
@@ -254,18 +252,18 @@ class AlertEvaluatorTest {
     }
 
     // Helper methods to reduce duplication
-    private AuditMetric createAuditMetric(String groupId, String streamId, long count) {
+    private AuditMetric createAuditMetric(String groupId, long count) {
         AuditMetric metric = new AuditMetric();
         metric.setInlongGroupId(groupId);
-        metric.setInlongStreamId(streamId);
+        metric.setInlongStreamId("stream1");
         metric.setCount(count);
         return metric;
     }
 
-    private AuditAlertRule createAlertRule(String groupId, String streamId, String operator, double value) {
+    private AuditAlertRule createAlertRule(String operator, double value) {
         AuditAlertRule rule = new AuditAlertRule();
-        rule.setInlongGroupId(groupId);
-        rule.setInlongStreamId(streamId);
+        rule.setInlongGroupId("group1");
+        rule.setInlongStreamId("stream1");
 
         AuditAlertCondition condition = new AuditAlertCondition();
         condition.setOperator(operator);
