@@ -1,365 +1,363 @@
-package org.apache.inlong.evaluator;
+package org.apache.inlong.audit.tool.evaluator;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
-import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
-import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import org.apache.inlong.audit.tool.metric.AuditMetric;
+import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class AlertEvaluatorTest {
-
-    @Mock
-    private PrometheusReporter prometheusReporter;
-
-    @Mock
-    private AuditAlertRuleManager auditAlertRuleManager = AuditAlertRuleManager.getInstance();
-
-    @Mock
-    private AuditMetric auditMetric;
+class AlertEvaluatorTest {
 
     private AlertEvaluator alertEvaluator;
+    private PrometheusReporter prometheusReporter;
+    private AuditAlertRuleManager auditAlertRuleManager;
+    private AuditMetric auditMetric;
 
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+    void setUp() {
+        prometheusReporter = mock(PrometheusReporter.class);
+        auditAlertRuleManager = mock(AuditAlertRuleManager.class);
+        auditMetric = mock(AuditMetric.class);
 
-        // Mock the PrometheusReporter to return an AuditMetric
         when(prometheusReporter.getAuditMetric()).thenReturn(auditMetric);
 
-        // Create the AlertEvaluator instance
         alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
     }
 
     @Test
-    public void testConstructor() {
-        assertNotNull(alertEvaluator);
-        assertEquals(auditAlertRuleManager, alertEvaluator.getAuditAlertRuleManager());
+    void testPrintAndReportDataproxyCompareWithStorage_NullMetrics() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+
+        // Test with null dataProxyMetrics
+        assertDoesNotThrow(() ->
+            alertEvaluator.printAndReportDataproxyCompareWithStorage(null, new ArrayList<>(), alertRule)
+        );
+
+        // Test with null storageMetrics
+        assertDoesNotThrow(() ->
+            alertEvaluator.printAndReportDataproxyCompareWithStorage(new ArrayList<>(), null, alertRule)
+        );
     }
 
     @Test
-    public void testEvaluateAndReportWithNullParameters() {
-        // Test with null parameters
-        alertEvaluator.evaluateAndReport(null, null, null);
-        // Should not throw any exception
+    void testPrintAndReportDataproxyCompareWithStorage_EmptyMetrics() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
 
-        // Test with null dataproxy metrics
-        alertEvaluator.evaluateAndReport(null, new ArrayList<>(), new AuditAlertRule());
-        // Should not throw any exception
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        // Test with null storage metrics
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), null, new AuditAlertRule());
-        // Should not throw any exception
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
-        // Test with null alert rule
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), null);
-        // Should not throw any exception
+        assertEquals("", outContent.toString());
+        System.setOut(System.out);
     }
 
     @Test
-    public void testEvaluateAndReportWithNullAlertCondition() {
-        // Test with null alert condition
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(null);
+    void testPrintAndReportDataproxyCompareWithStorage_DifferentGroupOrStream() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
 
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
-        // Should not throw any exception
-    }
-
-    @Test
-    public void testEvaluateAndReportWithInvalidConditionValues() {
-        // Test with null threshold
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(null);
-        condition.setOperator(">");
-
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
-
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
-        // Should not throw any exception
-
-        // Test with null operator
-        condition.setValue(10.0);
-        condition.setOperator(null);
-
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
-        // Should not throw any exception
-    }
-
-    @Test
-    public void testEvaluateAndReportWithNullStorageName() {
-        // Mock managerClient to return null storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn(null);
-
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
-
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
-
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
-        // Should not throw any exception
-        verify(auditAlertRuleManager, times(1)).fetchStorageType();
-    }
-
-    @Test
-    public void testEvaluateAndReportWithEmptyMetrics() {
-        // Mock managerClient to return a valid storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
-
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
-
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
-
-        alertEvaluator.evaluateAndReport(new ArrayList<>(), new ArrayList<>(), alertRule);
-        // Should not throw any exception
-        verify(auditAlertRuleManager, times(1)).fetchStorageType();
-    }
-
-    @Test
-    public void testEvaluateAndReportWithValidDataNoAlert() {
-        // Mock managerClient to return a valid storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
-
-        // Create test data with no alert condition match
-        AuditMetricVo dataproxyMetric = new AuditMetricVo();
-        dataproxyMetric.setInlongGroupId("group1");
-        dataproxyMetric.setInlongStreamId("stream1");
-        dataproxyMetric.setCount(100);
-
-        AuditMetricVo storageMetric = new AuditMetricVo();
-        storageMetric.setInlongGroupId("group1");
-        storageMetric.setInlongStreamId("stream1");
-        storageMetric.setCount(95); // Difference of 5, which is less than threshold 10
-
-        List<AuditMetricVo> dataproxyMetrics = new ArrayList<>();
-        dataproxyMetrics.add(dataproxyMetric);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
 
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
-        storageMetrics.add(storageMetric);
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group2"); // Different group
+        st.setInlongStreamId("stream1");
+        st.setCount(50);
+        storageMetrics.add(st);
 
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
-
-        // No alert should be triggered, so no metrics should be updated
-        verify(auditMetric, never()).updateDataproxyWithIcbergAlert(anyLong());
-        verify(auditMetric, never()).updateDataproxyWithHiveAlert(anyLong());
+        assertEquals("", outContent.toString());
+        System.setOut(System.out);
     }
 
     @Test
-    public void testEvaluateAndReportWithValidDataAlertTriggeredIceberg() {
-        // Mock managerClient to return iceberg storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
+    void testPrintAndReportDataproxyCompareWithStorage_GreaterThanOperator_Triggered() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
 
-        // Create test data with alert condition match
-        AuditMetricVo dataproxyMetric = new AuditMetricVo();
-        dataproxyMetric.setInlongGroupId("group1");
-        dataproxyMetric.setInlongStreamId("stream1");
-        dataproxyMetric.setCount(100);
-
-        AuditMetricVo storageMetric = new AuditMetricVo();
-        storageMetric.setInlongGroupId("group1");
-        storageMetric.setInlongStreamId("stream1");
-        storageMetric.setCount(80); // Difference of 20, which is greater than threshold 10
-
-        List<AuditMetricVo> dataproxyMetrics = new ArrayList<>();
-        dataproxyMetrics.add(dataproxyMetric);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
 
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
-        storageMetrics.add(storageMetric);
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(50); // Difference is 50, which is > 10
+        storageMetrics.add(st);
 
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("groupId=group1"));
+        assertTrue(output.contains("streamId=stream1"));
+        assertTrue(output.contains("sourceCount=100"));
+        assertTrue(output.contains("sinkCount=50"));
+        assertTrue(output.contains("diff=50"));
+        assertTrue(output.contains(">"));
+        assertTrue(output.contains("threshold=10"));
 
-        // Alert should be triggered for iceberg
-        verify(auditMetric, times(1)).updateDataproxyWithIcbergAlert(20L);
-        verify(auditMetric, never()).updateDataproxyWithHiveAlert(anyLong());
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(50L);
+        System.setOut(System.out);
     }
 
     @Test
-    public void testEvaluateAndReportWithValidDataAlertTriggeredHive() {
-        // Mock managerClient to return hive storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("hive");
+    void testPrintAndReportDataproxyCompareWithStorage_GreaterThanOperator_NotTriggered() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
 
-        // Create test data with alert condition match
-        AuditMetricVo dataproxyMetric = new AuditMetricVo();
-        dataproxyMetric.setInlongGroupId("group1");
-        dataproxyMetric.setInlongStreamId("stream1");
-        dataproxyMetric.setCount(100);
-
-        AuditMetricVo storageMetric = new AuditMetricVo();
-        storageMetric.setInlongGroupId("group1");
-        storageMetric.setInlongStreamId("stream1");
-        storageMetric.setCount(80); // Difference of 20, which is greater than threshold 10
-
-        List<AuditMetricVo> dataproxyMetrics = new ArrayList<>();
-        dataproxyMetrics.add(dataproxyMetric);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
 
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
-        storageMetrics.add(storageMetric);
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5, which is not > 10
+        storageMetrics.add(st);
 
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
-
-        // Alert should be triggered for hive
-        verify(auditMetric, times(1)).updateDataproxyWithHiveAlert(20L);
-        verify(auditMetric, never()).updateDataproxyWithIcbergAlert(anyLong());
+        assertEquals("", outContent.toString());
+        verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
+        System.setOut(System.out);
     }
 
     @Test
-    public void testEvaluateAndReportWithUnknownStorageType() {
-        // Mock managerClient to return unknown storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("unknown");
+    void testPrintAndReportDataproxyCompareWithStorage_GreaterEqualOperator() {
+        AuditAlertRule alertRule = createAlertRule(">=", 10.0);
 
-        // Create test data with alert condition match
-        AuditMetricVo dataproxyMetric = new AuditMetricVo();
-        dataproxyMetric.setInlongGroupId("group1");
-        dataproxyMetric.setInlongStreamId("stream1");
-        dataproxyMetric.setCount(100);
-
-        AuditMetricVo storageMetric = new AuditMetricVo();
-        storageMetric.setInlongGroupId("group1");
-        storageMetric.setInlongStreamId("stream1");
-        storageMetric.setCount(80); // Difference of 20, which is greater than threshold 10
-
-        List<AuditMetricVo> dataproxyMetrics = new ArrayList<>();
-        dataproxyMetrics.add(dataproxyMetric);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
 
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
-        storageMetrics.add(storageMetric);
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(90); // Difference is 10, which is >= 10
+        storageMetrics.add(st);
 
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(10.0);
-        condition.setOperator(">");
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        AuditAlertRule alertRule = new AuditAlertRule();
-        alertRule.setCondition(condition);
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("diff=10"));
+        assertTrue(output.contains(">="));
+        assertTrue(output.contains("threshold=10"));
 
-        // Alert should be triggered but no specific metric updated for unknown storage
-        verify(auditMetric, never()).updateDataproxyWithHiveAlert(anyLong());
-        verify(auditMetric, never()).updateDataproxyWithIcbergAlert(anyLong());
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(10L);
+        System.setOut(System.out);
     }
 
     @Test
-    public void testEvaluateConditionWithDifferentOperators() {
-        // Test > operator
-        assertTrue(invokeEvaluateCondition(10, ">", 5));
-        assertFalse(invokeEvaluateCondition(5, ">", 10));
+    void testPrintAndReportDataproxyCompareWithStorage_LessThanOperator() {
+        AuditAlertRule alertRule = createAlertRule("<", 20.0);
 
-        // Test >= operator
-        assertTrue(invokeEvaluateCondition(10, ">=", 10));
-        assertTrue(invokeEvaluateCondition(10, ">=", 5));
-        assertFalse(invokeEvaluateCondition(5, ">=", 10));
-
-        // Test < operator
-        assertTrue(invokeEvaluateCondition(5, "<", 10));
-        assertFalse(invokeEvaluateCondition(10, "<", 5));
-
-        // Test <= operator
-        assertTrue(invokeEvaluateCondition(5, "<=", 5));
-        assertTrue(invokeEvaluateCondition(5, "<=", 10));
-        assertFalse(invokeEvaluateCondition(10, "<=", 5));
-
-        // Test == operator
-        assertTrue(invokeEvaluateCondition(10, "==", 10));
-        assertFalse(invokeEvaluateCondition(10, "==", 5));
-
-        // Test != operator
-        assertTrue(invokeEvaluateCondition(10, "!=", 5));
-        assertFalse(invokeEvaluateCondition(10, "!=", 10));
-
-        // Test unsupported operator
-        assertFalse(invokeEvaluateCondition(10, "unsupported", 5));
-    }
-
-    // Helper method to test private evaluateCondition method
-    private boolean invokeEvaluateCondition(long diff, String op, double threshold) {
-        // We can test this indirectly by setting up conditions that will trigger it
-        // and checking if alerts are triggered appropriately
-
-        // Mock managerClient to return iceberg storage type
-        when(auditAlertRuleManager.fetchStorageType()).thenReturn("iceberg");
-
-        // Create test data
-        AuditMetricVo dataproxyMetric = new AuditMetricVo();
-        dataproxyMetric.setInlongGroupId("group1");
-        dataproxyMetric.setInlongStreamId("stream1");
-        dataproxyMetric.setCount(100);
-
-        AuditMetricVo storageMetric = new AuditMetricVo();
-        storageMetric.setInlongGroupId("group1");
-        storageMetric.setInlongStreamId("stream1");
-        storageMetric.setCount(100 - diff); // Set count to create desired difference
-
-        List<AuditMetricVo> dataproxyMetrics = new ArrayList<>();
-        dataproxyMetrics.add(dataproxyMetric);
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
 
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
-        storageMetrics.add(storageMetric);
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5, which is < 20
+        storageMetrics.add(st);
 
-        AuditAlertCondition condition = new AuditAlertCondition();
-        condition.setValue(threshold);
-        condition.setOperator(op);
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("diff=5"));
+        assertTrue(output.contains("<"));
+        assertTrue(output.contains("threshold=20"));
+
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
+        System.setOut(System.out);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_LessEqualOperator() {
+        AuditAlertRule alertRule = createAlertRule("<=", 5.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5, which is <= 5
+        storageMetrics.add(st);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("diff=5"));
+        assertTrue(output.contains("<="));
+        assertTrue(output.contains("threshold=5"));
+
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
+        System.setOut(System.out);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_EqualsOperator() {
+        AuditAlertRule alertRule = createAlertRule("==", 5.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5, which is == 5
+        storageMetrics.add(st);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("diff=5"));
+        assertTrue(output.contains("=="));
+        assertTrue(output.contains("threshold=5"));
+
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
+        System.setOut(System.out);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_NotEqualsOperator() {
+        AuditAlertRule alertRule = createAlertRule("!=", 5.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5, which is == 5, so != 5 is false
+        storageMetrics.add(st);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        assertEquals("", outContent.toString());
+        verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
+        System.setOut(System.out);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_InvalidOperator() {
+        AuditAlertRule alertRule = createAlertRule("invalid", 5.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(95); // Difference is 5
+        storageMetrics.add(st);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        assertEquals("", outContent.toString());
+        verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
+        System.setOut(System.out);
+    }
+
+    @Test
+    void testGetAuditAlertRuleManager() {
+        assertSame(auditAlertRuleManager, alertEvaluator.getAuditAlertRuleManager());
+    }
+
+    private AuditAlertRule createAlertRule(String operator, double value) {
         AuditAlertRule alertRule = new AuditAlertRule();
+        AuditAlertCondition condition = new AuditAlertCondition();
+        condition.setOperator(operator);
+        condition.setValue(value);
+        condition.setType("data_loss");
         alertRule.setCondition(condition);
-
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
-
-        // Reset mocks to check if alert was triggered
-        reset(auditMetric);
-
-        // Run again with known values to check if alert is triggered
-        alertEvaluator.evaluateAndReport(dataproxyMetrics, storageMetrics, alertRule);
-
-        try {
-            // Try to verify if updateDataproxyWithIcbergAlert was called
-            verify(auditMetric, times(1)).updateDataproxyWithIcbergAlert(diff);
-            return true;
-        } catch (AssertionError e) {
-            try {
-                verify(auditMetric, never()).updateDataproxyWithIcbergAlert(anyLong());
-                return false;
-            } catch (AssertionError e2) {
-                // If neither verification works, return false
-                return false;
-            }
-        }
+        return alertRule;
     }
 }
