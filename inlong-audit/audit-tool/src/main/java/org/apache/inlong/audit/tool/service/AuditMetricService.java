@@ -37,7 +37,7 @@ public class AuditMetricService {
             AuditMapper auditMapper = sqlSession.getMapper(AuditMapper.class);
             return auditMapper.getAuditMetrics(startLogTs, endLogTs, auditId);
         } catch (Exception e) {
-            LOGGER.error("Exception occurred during database query: ", e); // 打印完整异常栈
+            LOGGER.error("Exception occurred during database query: ", e);
             return Collections.emptyList();
         }
     }
