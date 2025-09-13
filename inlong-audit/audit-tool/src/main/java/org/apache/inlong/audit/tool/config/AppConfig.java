@@ -31,7 +31,7 @@ import static org.apache.inlong.audit.tool.config.ConfigConstants.*;
 @Getter
 public class AppConfig {
 
-    private Properties properties;
+    private final Properties properties;
 
     public AppConfig() {
         properties = new Properties();
