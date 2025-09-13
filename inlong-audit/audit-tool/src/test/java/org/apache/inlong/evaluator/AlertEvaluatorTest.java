@@ -1,12 +1,14 @@
-package org.apache.inlong.audit.tool.evaluator;
+package org.apache.inlong.evaluator;
 
 import org.apache.inlong.audit.tool.DTO.AuditAlertCondition;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
+import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.metric.AuditMetric;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +27,9 @@ class AlertEvaluatorTest {
     private AuditAlertRuleManager auditAlertRuleManager;
     private AuditMetric auditMetric;
 
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final PrintStream originalOut = System.out;
+
     @BeforeEach
     void setUp() {
         prometheusReporter = mock(PrometheusReporter.class);
@@ -34,6 +39,17 @@ class AlertEvaluatorTest {
         when(prometheusReporter.getAuditMetric()).thenReturn(auditMetric);
 
         alertEvaluator = new AlertEvaluator(prometheusReporter, auditAlertRuleManager);
+
+        // 重定向System.out到ByteArrayOutputStream
+        System.setOut(new PrintStream(outContent));
+    }
+
+    @AfterEach
+    void restoreStreams() {
+        // 恢复System.out
+        System.setOut(originalOut);
+        // 清空输出内容
+        outContent.reset();
     }
 
     @Test
@@ -57,13 +73,9 @@ class AlertEvaluatorTest {
         List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
-        System.setOut(System.out);
     }
 
     @Test
@@ -84,13 +96,9 @@ class AlertEvaluatorTest {
         st.setCount(50);
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
-        System.setOut(System.out);
     }
 
     @Test
@@ -111,9 +119,6 @@ class AlertEvaluatorTest {
         st.setCount(50); // Difference is 50, which is > 10
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
@@ -127,7 +132,6 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("threshold=10"));
 
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(50L);
-        System.setOut(System.out);
     }
 
     @Test
@@ -148,14 +152,10 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is not > 10
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
-        System.setOut(System.out);
     }
 
     @Test
@@ -176,9 +176,6 @@ class AlertEvaluatorTest {
         st.setCount(90); // Difference is 10, which is >= 10
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
@@ -188,7 +185,6 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("threshold=10"));
 
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(10L);
-        System.setOut(System.out);
     }
 
     @Test
@@ -209,9 +205,6 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is < 20
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
@@ -221,7 +214,6 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("threshold=20"));
 
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
-        System.setOut(System.out);
     }
 
     @Test
@@ -242,9 +234,6 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is <= 5
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
@@ -254,7 +243,6 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("threshold=5"));
 
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
-        System.setOut(System.out);
     }
 
     @Test
@@ -275,9 +263,6 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is == 5
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
@@ -287,7 +272,6 @@ class AlertEvaluatorTest {
         assertTrue(output.contains("threshold=5"));
 
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(5L);
-        System.setOut(System.out);
     }
 
     @Test
@@ -308,14 +292,10 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is == 5, so != 5 is false
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
-        System.setOut(System.out);
     }
 
     @Test
@@ -336,14 +316,63 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5
         storageMetrics.add(st);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
         alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
-        System.setOut(System.out);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_BoundaryCondition_EqualsThreshold() {
+        // 测试边界条件：差值正好等于阈值
+        AuditAlertRule alertRule = createAlertRule(">=", 10.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId("group1");
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId("group1");
+        st.setInlongStreamId("stream1");
+        st.setCount(90); // Difference is exactly 10
+        storageMetrics.add(st);
+
+        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("[ALERT]"));
+        assertTrue(output.contains("diff=10"));
+        assertTrue(output.contains(">="));
+        assertTrue(output.contains("threshold=10"));
+
+        verify(auditMetric).updateSourcAndSinkAuditDiffMetric(10L);
+    }
+
+    @Test
+    void testPrintAndReportDataproxyCompareWithStorage_NullGroupId() {
+        AuditAlertRule alertRule = createAlertRule(">", 10.0);
+
+        List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
+        AuditMetricVo dp = new AuditMetricVo();
+        dp.setInlongGroupId(null);
+        dp.setInlongStreamId("stream1");
+        dp.setCount(100);
+        dataProxyMetrics.add(dp);
+
+        List<AuditMetricVo> storageMetrics = new ArrayList<>();
+        AuditMetricVo st = new AuditMetricVo();
+        st.setInlongGroupId(null);
+        st.setInlongStreamId("stream1");
+        st.setCount(50);
+        storageMetrics.add(st);
+
+        assertDoesNotThrow(() ->
+            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule)
+        );
     }
 
     @Test
