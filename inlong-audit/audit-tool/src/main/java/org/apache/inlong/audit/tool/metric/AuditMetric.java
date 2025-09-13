@@ -15,33 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.basemetric;
+package org.apache.inlong.audit.tool.metric;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 
 public class AuditMetric {
 
-    private final Gauge dataproxyWithIcbergAlert;
-    private final Gauge dataproxyWithHiveAlert;
+    private final Gauge sourcAndSinkAuditDiffMetric;
 
     public AuditMetric(CollectorRegistry registry) {
-        this.dataproxyWithIcbergAlert = Gauge.build()
-                .name("inlong_dataproxy_iceberg_diff")
-                .help("The difference in count when triggering an alarm between dataproxy and icberg")
-                .register(registry);
-
-        this.dataproxyWithHiveAlert = Gauge.build()
-                .name("inlong_dataproxy_hive_diff")
-                .help("The difference in count when an alarm is triggered between dataproxy and hive")
+        this.sourcAndSinkAuditDiffMetric = Gauge.build()
+                .name("inlong_source_sink_diff")
+                .help("The difference in count between inflow and outflow")
                 .register(registry);
     }
 
-    public void updateDataproxyWithIcbergAlert(long diff) {
-        dataproxyWithIcbergAlert.set(diff);
-    }
-
-    public void updateDataproxyWithHiveAlert(long diff) {
-        dataproxyWithHiveAlert.set(diff);
+    public void updateSourcAndSinkAuditDiffMetric(long diff) {
+        sourcAndSinkAuditDiffMetric.set(diff);
     }
 }

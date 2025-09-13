@@ -21,6 +21,7 @@ import org.apache.inlong.audit.AuditIdEnum;
 import org.apache.inlong.audit.tool.DTO.AuditAlertRule;
 import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.config.AppConfig;
+import org.apache.inlong.audit.tool.config.ConfigConstants;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;
 import org.apache.inlong.audit.tool.service.AuditMetricService;
@@ -28,6 +29,8 @@ import org.apache.inlong.audit.tool.service.AuditMetricService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -45,6 +48,10 @@ public class AuditCheckTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditAlertRuleManager.class);
     private final AuditMetricService auditMetricService;
     private Integer executionIntervalTime;
+    private Integer intervalTimeMinute;
+    private Integer delayTimeMinute;
+    private static final DateTimeFormatter LOGTS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private String sourceAuditId;
 
     public AuditCheckTask(
             AuditAlertRuleManager auditAlertRuleManager, AlertEvaluator alertEvaluator, AppConfig appConfig) {
@@ -53,11 +60,17 @@ public class AuditCheckTask {
         this.auditMetricService = new AuditMetricService();
         try {
             this.executionIntervalTime =
-                    Integer.valueOf(appConfig.getProperties().getProperty("audit.data.time.interval.minute"));
+                    Integer.valueOf(appConfig.getProperties().getProperty(ConfigConstants.KEY_DELAY_TIME,"1"));
+            this.intervalTimeMinute =
+                    Integer.parseInt(appConfig.getProperties().getProperty(ConfigConstants.KEY_INTERVAL_TIME, "1"));
+            this.sourceAuditId=appConfig.getProperties().getProperty(ConfigConstants.KEY_SOURCE_AUDIT_ID, "5");
         } catch (Exception e) {
-            LOGGER.info("No configuration related to execution interval time was read, default setting is 1");
+            LOGGER.info("Failed to read configuration information, default source AuditId is 5, delay execution time is 1, time interval is 1");
             this.executionIntervalTime = 1;
+            this.intervalTimeMinute=1;
+            this.sourceAuditId="5";
         }
+        this.delayTimeMinute=executionIntervalTime;
     }
 
     /**
@@ -72,40 +85,34 @@ public class AuditCheckTask {
      */
     private void checkAuditData() {
         // Obtain auditIds provided by the interface
-        List<String> auditIds = auditAlertRuleManager.fetchAuditIds();
-        List<String> icebergAuditIds = new ArrayList<>();
-        List<String> hiveAuditIds = new ArrayList<>();
-
-        // Classify auditIds as iceberg and dataproxy auditIds respectively
-        for (String auditId : auditIds) {
-            int auditIdInt = Integer.parseInt(auditId);
-
-            if (auditIdInt == AuditIdEnum.SORT_HIVE_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.SORT_HIVE_OUTPUT.getValue()) {
-                hiveAuditIds.add(auditId);
-            } else if (auditIdInt == AuditIdEnum.SORT_ICEBERG_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.SORT_ICEBERG_OUTPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.ICEBERG_AO_INPUT.getValue() ||
-                    auditIdInt == AuditIdEnum.ICEBERG_AO_OUTPUT.getValue()) {
-                icebergAuditIds.add(auditId);
-            }
+        List<String> sinkAuditIds = auditAlertRuleManager.getAuditIds();
+        if(sinkAuditIds==null){
+            return;
         }
 
-        // Search for relevant data in the database using auditId
-        List<AuditMetricVo> dataproxyAuditMetrics = auditMetricService.getDataproxyAuditMetrics();
-        List<AuditMetricVo> icebergAuditMetrics = auditMetricService.getIcebergAuditMetrics(icebergAuditIds);
-        List<AuditMetricVo> hiveAuditMetrics = auditMetricService.getHiveAuditMetrics(hiveAuditIds);
-
         // Obtain alarm strategy
-        List<AuditAlertRule> alertRules = auditAlertRuleManager.fetchAlertRules();
+        List<AuditAlertRule> alertRules = auditAlertRuleManager.getAuditAlertRuleList();
 
-        for (AuditAlertRule alertRule : alertRules) {
-            // When the threshold condition is reached, output the alarm information to the console and report it to
-            // Prometheus
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, icebergAuditMetrics,
-                    alertRule, "iceberg");
-            alertEvaluator.printAndReportDataproxyCompareWithStorage(dataproxyAuditMetrics, hiveAuditMetrics, alertRule,
-                    "hive");
+        //Obtain the range of logts that need to be queried
+        String startLogTs=getStartLogTs();
+        String endLogTs=getEndLogTs();
+
+        //Query the relevant indicator data of auditId source
+        List<AuditMetricVo> sourceAuditMetric = auditMetricService.getStorageAuditMetrics(sourceAuditId,startLogTs,endLogTs);
+        if(sourceAuditMetric==null){
+            return;
+        }
+
+        //Compare the source auditId related indicator data with the sink auditId related indicator data
+        for(String sinkAuditId:sinkAuditIds){
+            List<AuditMetricVo> sinkAuditMetrics = auditMetricService.getStorageAuditMetrics(sinkAuditId,startLogTs,endLogTs);
+            if(sinkAuditMetrics==null||sinkAuditMetrics.size()==0){
+                continue;
+            }
+            for (AuditAlertRule alertRule : alertRules) {
+                alertEvaluator.printAndReportDataproxyCompareWithStorage(sourceAuditMetric, sinkAuditMetrics,
+                        alertRule);
+            }
         }
     }
 
@@ -122,6 +129,20 @@ public class AuditCheckTask {
             scheduler.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    private String getStartLogTs(){
+        return LocalDateTime.now()
+                .withSecond(0)
+                .minusMinutes(delayTimeMinute)
+                .minusMinutes(intervalTimeMinute)
+                .format(LOGTS_FMT);
+    }
+    private String getEndLogTs(){
+        return LocalDateTime.now()
+                .withSecond(0)
+                .minusMinutes(delayTimeMinute)
+                .format(LOGTS_FMT);
     }
 
 }

@@ -18,7 +18,7 @@
 package org.apache.inlong.audit.tool.reporter;
 
 import org.apache.inlong.audit.tool.DTO.MetricData;
-import org.apache.inlong.audit.tool.basemetric.AuditMetric;
+import org.apache.inlong.audit.tool.metric.AuditMetric;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;

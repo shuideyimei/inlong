@@ -17,7 +17,7 @@
 
 package org.apache.inlong.audit.tool;
 
-import org.apache.inlong.audit.tool.basemetric.util.AuditSQLUtil;
+import org.apache.inlong.audit.tool.util.AuditSQLUtil;
 import org.apache.inlong.audit.tool.config.AppConfig;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.AuditAlertRuleManager;

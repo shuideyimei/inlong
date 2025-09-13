@@ -39,8 +39,7 @@ public class AlertEvaluator {
     }
     public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
             List<AuditMetricVo> storageMetrics,
-            AuditAlertRule alertRule,
-            String storageName) {
+            AuditAlertRule alertRule) {
         if (dataProxyMetrics == null || storageMetrics == null) {
             return;
         }
@@ -84,20 +83,10 @@ public class AlertEvaluator {
 
                 if (hit) {
                     System.out.printf(
-                            "[ALERT] groupId=%s, streamId=%s | dataproxy=%d, %s=%d | diff=%d  %s threshold=%.0f%n",
+                            "[ALERT] groupId=%s, streamId=%s | sourceCount=%d, sinkCount=%d | diff=%d  %s threshold=%.0f%n",
                             dp.getInlongGroupId(), dp.getInlongStreamId(),
-                            dp.getCount(), storageName, st.getCount(), diff, op, threshold);
-                    switch (storageName) {
-                        case "iceberg":
-                            prometheusReporter.getAuditMetric().updateDataproxyWithIcbergAlert(diff);
-                            break;
-                        case "hive":
-                            prometheusReporter.getAuditMetric().updateDataproxyWithHiveAlert(diff);
-                            break;
-                        default:
-                            System.out.println("[ALERT] Unknown storage name: " + storageName);
-                            break;
-                    }
+                            dp.getCount(), st.getCount(), diff, op, threshold);
+                    prometheusReporter.getAuditMetric().updateSourcAndSinkAuditDiffMetric(diff);
                 }
             }
         }

@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.inlong.audit.tool.basemetric.util;
+package org.apache.inlong.audit.tool.util;
 
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.inlong.audit.tool.mapper.AuditMapper;
 
 import javax.sql.DataSource;
 
@@ -44,7 +45,7 @@ public class AuditSQLUtil {
                     new org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory(),
                     dataSource));
 
-            configuration.addMapper(org.apache.inlong.audit.tool.basemetric.mapper.AuditMapper.class);
+            configuration.addMapper(AuditMapper.class);
 
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
 

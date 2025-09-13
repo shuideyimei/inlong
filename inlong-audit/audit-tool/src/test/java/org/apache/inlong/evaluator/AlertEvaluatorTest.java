@@ -6,7 +6,7 @@ import org.apache.inlong.audit.tool.VO.AuditMetricVo;
 import org.apache.inlong.audit.tool.evaluator.AlertEvaluator;
 import org.apache.inlong.audit.tool.manager.ManagerClient;
 import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
-import org.apache.inlong.audit.tool.basemetric.AuditMetric;
+import org.apache.inlong.audit.tool.metric.AuditMetric;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
