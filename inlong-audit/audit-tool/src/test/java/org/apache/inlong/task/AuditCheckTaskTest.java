@@ -38,7 +38,9 @@ public class AuditCheckTaskTest {
 
         // Mock AppConfig behavior
         when(appConfig.getProperties()).thenReturn(properties);
-        when(properties.getProperty("audit.data.time.interval.minute")).thenReturn("5");
+        when(properties.getProperty("audit.data.time.delay.minute", "1")).thenReturn("1");
+        when(properties.getProperty("audit.data.time.interval.minute", "1")).thenReturn("5");
+        when(properties.getProperty("audit.id.source", "5")).thenReturn("5");
 
         // Create AuditCheckTask instance
         auditCheckTask = new AuditCheckTask(auditAlertRuleManager, alertEvaluator, appConfig);
@@ -50,8 +52,10 @@ public class AuditCheckTaskTest {
         assertNotNull(auditCheckTask);
 
         // Verify that the properties were read correctly
-        verify(appConfig, times(1)).getProperties();
-        verify(properties, times(1)).getProperty("audit.data.time.interval.minute");
+        verify(appConfig, times(3)).getProperties();
+        verify(properties, times(1)).getProperty("audit.data.time.delay.minute", "1");
+        verify(properties, times(1)).getProperty("audit.data.time.interval.minute", "1");
+        verify(properties, times(1)).getProperty("audit.id.source", "5");
     }
 
     @Test

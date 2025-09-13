@@ -352,6 +352,7 @@ class AlertEvaluatorTest {
         verify(auditMetric).updateSourcAndSinkAuditDiffMetric(10L);
     }
 
+
     @Test
     void testPrintAndReportDataproxyCompareWithStorage_NullGroupId() {
         AuditAlertRule alertRule = createAlertRule(">", 10.0);

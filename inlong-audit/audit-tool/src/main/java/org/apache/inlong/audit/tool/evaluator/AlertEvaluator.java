@@ -26,6 +26,7 @@ import org.apache.inlong.audit.tool.reporter.PrometheusReporter;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Objects;
 
 public class AlertEvaluator {
 
@@ -50,8 +51,8 @@ public class AlertEvaluator {
 
         for (AuditMetricVo dp : dataProxyMetrics) {
             for (AuditMetricVo st : storageMetrics) {
-                if (!dp.getInlongGroupId().equals(st.getInlongGroupId()) ||
-                        !dp.getInlongStreamId().equals(st.getInlongStreamId())) {
+                if (!Objects.equals(dp.getInlongGroupId(), st.getInlongGroupId()) ||
+                        !Objects.equals(dp.getInlongStreamId(), st.getInlongStreamId())) {
                     continue;
                 }
 
