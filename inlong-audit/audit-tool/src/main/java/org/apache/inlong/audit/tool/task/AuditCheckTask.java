@@ -111,7 +111,7 @@ public class AuditCheckTask {
                 continue;
             }
             for (AuditAlertRule alertRule : alertRules) {
-                alertEvaluator.printAndReportDataproxyCompareWithStorage(sourceAuditMetric, sinkAuditMetrics,
+                alertEvaluator.evaluateAndReportAlert(sourceAuditMetric, sinkAuditMetrics,
                         alertRule);
             }
         }

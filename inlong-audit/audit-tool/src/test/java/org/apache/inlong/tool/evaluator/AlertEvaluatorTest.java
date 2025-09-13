@@ -73,11 +73,11 @@ class AlertEvaluatorTest {
 
         // Test with null dataProxyMetrics
         assertDoesNotThrow(
-                () -> alertEvaluator.printAndReportDataproxyCompareWithStorage(null, new ArrayList<>(), alertRule));
+                () -> alertEvaluator.evaluateAndReportAlert(null, new ArrayList<>(), alertRule));
 
         // Test with null storageMetrics
         assertDoesNotThrow(
-                () -> alertEvaluator.printAndReportDataproxyCompareWithStorage(new ArrayList<>(), null, alertRule));
+                () -> alertEvaluator.evaluateAndReportAlert(new ArrayList<>(), null, alertRule));
     }
 
     @Test
@@ -86,7 +86,7 @@ class AlertEvaluatorTest {
         List<AuditMetricVo> dataProxyMetrics = new ArrayList<>();
         List<AuditMetricVo> storageMetrics = new ArrayList<>();
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
     }
@@ -109,7 +109,7 @@ class AlertEvaluatorTest {
         st.setCount(50);
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
     }
@@ -132,7 +132,7 @@ class AlertEvaluatorTest {
         st.setCount(50); // Difference is 50, which is > 10
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -165,7 +165,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is not > 10
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
@@ -189,7 +189,7 @@ class AlertEvaluatorTest {
         st.setCount(90); // Difference is 10, which is >= 10
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -218,7 +218,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is < 20
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -247,7 +247,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is <= 5
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -276,7 +276,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is == 5
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -305,7 +305,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5, which is == 5, so != 5 is false
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
@@ -329,7 +329,7 @@ class AlertEvaluatorTest {
         st.setCount(95); // Difference is 5
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         assertEquals("", outContent.toString());
         verify(auditMetric, never()).updateSourcAndSinkAuditDiffMetric(anyLong());
@@ -354,7 +354,7 @@ class AlertEvaluatorTest {
         st.setCount(90); // Difference is exactly 10
         storageMetrics.add(st);
 
-        alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics, storageMetrics, alertRule);
+        alertEvaluator.evaluateAndReportAlert(dataProxyMetrics, storageMetrics, alertRule);
 
         String output = outContent.toString();
         assertTrue(output.contains("[ALERT]"));
@@ -383,7 +383,7 @@ class AlertEvaluatorTest {
         st.setCount(50);
         storageMetrics.add(st);
 
-        assertDoesNotThrow(() -> alertEvaluator.printAndReportDataproxyCompareWithStorage(dataProxyMetrics,
+        assertDoesNotThrow(() -> alertEvaluator.evaluateAndReportAlert(dataProxyMetrics,
                 storageMetrics, alertRule));
     }
 

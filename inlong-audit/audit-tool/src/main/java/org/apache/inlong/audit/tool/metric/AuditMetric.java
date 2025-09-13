@@ -31,7 +31,7 @@ public class AuditMetric {
                 .register(registry);
     }
 
-    public void updateSourcAndSinkAuditDiffMetric(long diff) {
+    public void updateSourceAndSinkAuditDiffMetric(double diff) {
         sourcAndSinkAuditDiffMetric.set(diff);
     }
 }

@@ -36,15 +36,17 @@ public class AlertEvaluator {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditAlertRuleManager.class);
     @Getter
     private final AuditAlertRuleManager auditAlertRuleManager;
+
     public AlertEvaluator(PrometheusReporter prometheusReporter,
-            AuditAlertRuleManager auditAlertRuleManager) {
+                          AuditAlertRuleManager auditAlertRuleManager) {
         this.prometheusReporter = prometheusReporter;
         this.auditAlertRuleManager = auditAlertRuleManager;
     }
-    public void printAndReportDataproxyCompareWithStorage(List<AuditMetricVo> dataProxyMetrics,
-            List<AuditMetricVo> storageMetrics,
-            AuditAlertRule alertRule) {
-        if (dataProxyMetrics == null || storageMetrics == null) {
+
+    public void evaluateAndReportAlert(List<AuditMetricVo> sourceMetrics,
+                                       List<AuditMetricVo> sinkMetrics,
+                                       AuditAlertRule alertRule) {
+        if (sourceMetrics == null || sinkMetrics == null) {
             return;
         }
 
@@ -52,14 +54,23 @@ public class AlertEvaluator {
         double threshold = condition.getValue();
         String op = condition.getOperator();
 
-        for (AuditMetricVo dp : dataProxyMetrics) {
-            for (AuditMetricVo st : storageMetrics) {
-                if (!Objects.equals(dp.getInlongGroupId(), st.getInlongGroupId()) ||
-                        !Objects.equals(dp.getInlongStreamId(), st.getInlongStreamId())) {
+        for (AuditMetricVo source : sourceMetrics) {
+            if (!Objects.equals(source.getInlongGroupId(), alertRule.getInlongGroupId()) ||
+                    !Objects.equals(source.getInlongStreamId(), alertRule.getInlongStreamId())) {
+                continue;
+            }
+            for (AuditMetricVo sink : sinkMetrics) {
+                if (!Objects.equals(source.getInlongGroupId(), sink.getInlongGroupId()) ||
+                        !Objects.equals(source.getInlongStreamId(), sink.getInlongStreamId())) {
                     continue;
                 }
 
-                long diff = Math.abs(dp.getCount() - st.getCount());
+                if (source.getCount() == 0) {
+                    continue;
+                }
+
+                double diff = (sink.getCount() - source.getCount()) / (double) source.getCount();
+
                 boolean hit = false;
 
                 switch (op) {
@@ -87,10 +98,10 @@ public class AlertEvaluator {
 
                 if (hit) {
                     LOGGER.error(
-                            "[ALERT] groupId=%s, streamId=%s | sourceCount=%d, sinkCount=%d | diff=%d  %s threshold=%.0f%n",
-                            dp.getInlongGroupId(), dp.getInlongStreamId(),
-                            dp.getCount(), st.getCount(), diff, op, threshold);
-                    prometheusReporter.getAuditMetric().updateSourcAndSinkAuditDiffMetric(diff);
+                            "[ALERT] groupId={}, streamId={} | sourceCount={}, sinkCount={} | diff={} {} threshold={}",
+                            source.getInlongGroupId(), source.getInlongStreamId(),
+                            source.getCount(), sink.getCount(), diff, op, threshold);
+                    prometheusReporter.getAuditMetric().updateSourceAndSinkAuditDiffMetric(diff);
                 }
             }
         }
