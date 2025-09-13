@@ -185,7 +185,7 @@ public class AuditAlertRuleManager {
      */
     public List<String> getAuditIds() {
         List<String> auditIds = new ArrayList<>();
-        // Process each audit alert rule to fetch corresponding auditIds
+        // Process each audit alert rule to get corresponding auditIds
         for (AuditAlertRule auditAlertRule : auditAlertRuleList) {
             // Convert comma-separated audit IDs to list and trim whitespace
             List<String> auditIdList = Arrays.stream(auditAlertRule.getAuditId().split(","))
